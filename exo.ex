@@ -82,6 +82,10 @@ defmodule Exo do
     end
   end
 
+  def x <~> y do
+    eqo x, y
+  end
+
   def call_with_fresh fun do
     # -> (-> Var -- Goal) -- Goal
     fn state ->
@@ -468,20 +472,9 @@ defmodule Exo.Text do
 
   test "run" do
     run 10, x do
-      eqo [1, 2, "x"], [1, 2, x]
+      [1, 2, "x"] <~> [1, 2, x]
     end
     |> IO.inspect
   end
-
-  # def x ~ y do
-  #   eqo x, y
-  # end
-
-  # test "run" do
-  #   run 10, x do
-  #     [1, 2, "x"] ~ [1, 2, x]
-  #   end
-  #   |> IO.inspect
-  # end
 
 end
