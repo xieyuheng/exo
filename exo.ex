@@ -1,4 +1,7 @@
 defmodule Exo do
+
+  ### microkanren
+
   defmodule Var do
     defstruct id: 0
   end
@@ -19,6 +22,8 @@ defmodule Exo do
   # Substitution = Var Term Map
 
   def walk u, s do
+    # walk until the term is not Var
+    #   does not care about other Vars in the result term
     # -> Term, Substitution -- Term
     case u do
       %Var{} ->
@@ -60,7 +65,7 @@ defmodule Exo do
 
   def empty_state do
     # -> -- State
-    %State{}
+    %State{id_counter: 0, substitution: %{}}
   end
 
   # Goal = (-> State -- StateStream)
@@ -126,6 +131,8 @@ defmodule Exo do
       [head | tail] -> mplus g.(head), bind(tail, g)
     end
   end
+
+  ### some macros
 
   defmacro zzz g do
     quote do
@@ -218,11 +225,12 @@ defmodule Exo do
   #   end
   # end
 
-  defmacro fresh vars, exp do
-    case vars do
+  defmacro fresh var_list, exp do
+    case var_list do
       {_, _, atom} when is_atom(atom) ->
+        var_list = [var_list]
         quote do
-          fresh([unquote(vars)], unquote(exp))
+          fresh(unquote(var_list), unquote(exp))
         end
       [var | []] ->
         quote do
@@ -239,31 +247,99 @@ defmodule Exo do
     end
   end
 
-  def pull stream do
-    if is_function(stream) do
-      pull(stream.())
+  ### state_stream to state_list
+
+  def pull state_stream do
+    if is_function(state_stream) do
+      pull(state_stream.())
     else
-      stream
+      state_stream
     end
   end
 
-  def take_all stream do
-    stream = pull(stream)
-    case stream do
+  def take_all state_stream do
+    state_stream = pull(state_stream)
+    case state_stream do
       [] -> []
       [head | tail] -> [head | take_all(tail)]
     end
   end
 
-  def take n, stream do
+  def take n, state_stream do
     if n === 0 do
       []
     else
-      stream = pull(stream)
-      case stream do
+      state_stream = pull(state_stream)
+      case state_stream do
         [] -> []
         [head | tail] -> [head | take(n-1, tail)]
       end
+    end
+  end
+
+  ### reification
+
+  def mk_reify state_list do
+    # -> State List -- Reification List
+    state_list |> Enum.map(&reify_state_with_1st_var/1)
+  end
+
+  def reify_state_with_1st_var state do
+    # -> State -- Reification
+    substitution = Map.get(state, :substitution)
+    v = deep_walk(var_c(0), substitution)
+    deep_walk(v, reify_s(v, []))
+  end
+
+  def deep_walk v, s do
+    # -> Term, Substitution -- Term
+    v = walk v, s
+    case v do
+      %Var{} -> v
+      [head | tail] -> [deep_walk(head, s) | deep_walk(tail, s)]
+      _ -> v
+    end
+  end
+
+  def reify_s v, s do
+    # -> Term, Substitution -- Substitution
+    case v do
+      %Var{} ->
+        n = reify_name(length(s))
+        [[v | n] | s]
+      [head | tail] -> reify_s(tail, reify_s(head, s))
+      _ -> s
+    end
+  end
+
+  def reify_name n do
+    # -> Nat -- Atom
+    n
+    |> Integer.to_string
+    |> (fn s -> "_" <> s end).()
+    |> String.to_atom
+  end
+
+  ### user interface
+
+  def call_with_empty_state goal do
+    # -> Goal -- StateStream
+    empty_state() |> goal.()
+  end
+
+  defmacro run n, var, exp do
+    quote do
+      goal = fresh(unquote(var), unquote(exp))
+      take(unquote(n), call_with_empty_state(goal))
+      |> mk_reify
+    end
+  end
+
+  defmacro run_all var, exp do
+    quote do
+      goal = fresh(unquote(var), unquote(exp))
+      take_all(call_with_empty_state(goal))
+      |> mk_reify
     end
   end
 
@@ -312,16 +388,16 @@ defmodule Exo.Text do
 
   test "goal" do
     goal = call_with_fresh fn a -> eqo a, 5 end
-    stream = empty_state() |> goal.()
-    assert stream === [state_c(1, %{var_c(0) => 5})]
+    state_stream = empty_state() |> goal.()
+    assert state_stream === [state_c(1, %{var_c(0) => 5})]
 
     goal = eqo [1, 2, 3], [1, 2, 3]
-    stream = empty_state() |> goal.()
-    assert stream === [state_c(0, %{})]
+    state_stream = empty_state() |> goal.()
+    assert state_stream === [state_c(0, %{})]
 
     goal = eqo [1, 2, 3], [3, 2, 1]
-    stream = empty_state() |> goal.()
-    assert stream === []
+    state_stream = empty_state() |> goal.()
+    assert state_stream === []
   end
 
   def a_and_b do
@@ -334,8 +410,8 @@ defmodule Exo.Text do
 
   test "a and b" do
     goal = a_and_b()
-    stream = empty_state() |> goal.()
-    assert stream === [
+    state_stream = empty_state() |> goal.()
+    assert state_stream === [
       state_c(2, %{var_c(0) => 7, var_c(1) => 5}),
       state_c(2, %{var_c(0) => 7, var_c(1) => 6}),
     ]
@@ -360,9 +436,9 @@ defmodule Exo.Text do
 
   test "fives" do
     goal = call_with_fresh &fives/1
-    stream = empty_state() |> goal.()
-    assert hd(stream) === state_c(1, %{var_c(0) => 5})
-    assert is_function tl(stream)
+    state_stream = empty_state() |> goal.()
+    assert hd(state_stream) === state_c(1, %{var_c(0) => 5})
+    assert is_function tl(state_stream)
   end
 
   # with macros
@@ -375,11 +451,37 @@ defmodule Exo.Text do
         eqo b, 6
       end
     end
-    stream = empty_state() |> goal.()
-    assert take_all(stream) === [
+    state_stream = empty_state() |> goal.()
+    assert take_all(state_stream) === [
       state_c(2, %{var_c(0) => 7, var_c(1) => 5}),
       state_c(2, %{var_c(0) => 7, var_c(1) => 6}),
     ]
   end
+
+  test "run ten fives" do
+    run 10, x do
+      fives(x)
+    end
+    |> (fn results ->
+      assert results === [5, 5, 5, 5, 5, 5, 5, 5, 5, 5] end).()
+  end
+
+  test "run" do
+    run 10, x do
+      eqo [1, 2, "x"], [1, 2, x]
+    end
+    |> IO.inspect
+  end
+
+  # def x ~ y do
+  #   eqo x, y
+  # end
+
+  # test "run" do
+  #   run 10, x do
+  #     [1, 2, "x"] ~ [1, 2, x]
+  #   end
+  #   |> IO.inspect
+  # end
 
 end
