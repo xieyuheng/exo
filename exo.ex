@@ -42,9 +42,9 @@ defmodule Exo do
       {%Var{id: id}, %Var{id: id}} -> s
       {%Var{}, _} -> Map.put s, u, v
       {_, %Var{}} -> Map.put s, v, u
-      {[u_car|u_cdr], [v_car|v_cdr]} ->
-        s = unify u_car, v_car, s
-        s && unify u_cdr, v_cdr, s
+      {[u_head | u_tail], [v_head | v_tail]} ->
+        s = unify u_head, v_head, s
+        s && unify u_tail, v_tail, s
       _ -> u === v && s
     end
   end
@@ -63,7 +63,7 @@ defmodule Exo do
     %State{}
   end
 
-  # Goal = (-> State -- State Stream)
+  # Goal = (-> State -- StateStream)
 
   def eqo u, v do
     # -> Trem, Trem -- Goal
@@ -104,15 +104,171 @@ defmodule Exo do
   end
 
   def mplus s1, s2 do
-    # -> State Stream, State Stream -- State Stream
-    Stream.concat s1, s2
+    # -> StateStream, StateStream -- StateStream
+    case s1 do
+      [] -> s2
+      trunk when trunk |> is_function ->
+        # use interleaving
+        #   to implement a complete search strategy
+        # ><><><
+        #   maybe we can use actor model to parallelize this
+        fn -> mplus s2, trunk.() end
+      [head | tail] -> [head | mplus(tail, s2)]
+    end
   end
 
   def bind s, g do
-    # -> State Stream, Goal -- State Stream
-    s |> Stream.map(g) |> Stream.concat
+    # -> StateStream, Goal -- StateStream
+    case s do
+      [] -> []
+      trunk when trunk |> is_function ->
+        fn -> bind trunk.(), g end
+      [head | tail] -> mplus g.(head), bind(tail, g)
+    end
   end
+
+  defmacro zzz g do
+    quote do
+      fn state ->
+        fn ->
+          unquote(g).(state)
+        end
+      end
+    end
+  end
+
+  # ando do
+  #   g1
+  #   g2
+  #   g3
+  # end
+
+  # ==>
+
+  # ando([g1, g2, g3])
+
+  # ==>
+
+  # conj(zzz(g1),
+  #   conj(zzz(g2),
+  #     zzz(g3)))
+
+  defmacro ando exp do
+    case exp do
+      [do: {:__block__, _, list}] ->
+        quote do
+          ando(unquote(list))
+        end
+      [do: single] ->
+        quote do
+          ando(unquote([single]))
+        end
+      [head | []] ->
+        quote do
+          zzz(unquote(head))
+        end
+      [head | tail] ->
+        quote do
+          conj(zzz(unquote(head)), ando(unquote(tail)))
+        end
+    end
+  end
+
+  defmacro oro exp do
+    case exp do
+      [do: {:__block__, _, list}] ->
+        quote do
+          oro(unquote(list))
+        end
+      [do: single] ->
+        quote do
+          oro(unquote([single]))
+        end
+      [head | []] ->
+        quote do
+          zzz(unquote(head))
+        end
+      [head | tail] ->
+        quote do
+          disj(zzz(unquote(head)), oro(unquote(tail)))
+        end
+    end
+  end
+
+  # no conde
+  #   we use oro instead of conde for now
+
+  # fresh [a, b, c] do
+  #   g1
+  #   g2
+  #   g3
+  # end
+
+  # ==>
+
+  # call_with_fresh fn a ->
+  #   call_with_fresh fn b ->
+  #     call_with_fresh fn c ->
+  #       ando do
+  #         g1
+  #         g2
+  #         g3
+  #       end
+  #     end
+  #   end
+  # end
+
+  defmacro fresh vars, exp do
+    case vars do
+      {_, _, atom} when is_atom(atom) ->
+        quote do
+          fresh([unquote(vars)], unquote(exp))
+        end
+      [var | []] ->
+        quote do
+          call_with_fresh fn unquote(var) ->
+            ando(unquote(exp))
+          end
+        end
+      [var | tail] ->
+        quote do
+          call_with_fresh fn unquote(var) ->
+            fresh(unquote(tail), unquote(exp))
+          end
+        end
+    end
+  end
+
+  def pull stream do
+    if is_function(stream) do
+      pull(stream.())
+    else
+      stream
+    end
+  end
+
+  def take_all stream do
+    stream = pull(stream)
+    case stream do
+      [] -> []
+      [head | tail] -> [head | take_all(tail)]
+    end
+  end
+
+  def take n, stream do
+    if n === 0 do
+      []
+    else
+      stream = pull(stream)
+      case stream do
+        [] -> []
+        [head | tail] -> [head | take(n-1, tail)]
+      end
+    end
+  end
+
 end
+
 
 ExUnit.start
 
@@ -179,11 +335,51 @@ defmodule Exo.Text do
   test "a and b" do
     goal = a_and_b()
     stream = empty_state() |> goal.()
-    list = Enum.take stream, 100
-    assert length(list) === 2
-    assert list === [
+    assert stream === [
       state_c(2, %{var_c(0) => 7, var_c(1) => 5}),
       state_c(2, %{var_c(0) => 7, var_c(1) => 6}),
     ]
   end
+
+  # The following query will fail to terminate,
+  #   as the call to disj will invoke mplus
+  #   to collect all results and returns them as a list.
+  # For an infinite relation, such as fives above,
+  #   collecting all the results before returning any of them
+  #   ensures no results are returned.
+
+  # def fives x do
+  #   disj(eqo(x, 5), fives(x))
+  # end
+
+  def fives x do
+    # disj(eqo(x, 5), zzz(fives(x)))
+    # disj(eqo(x, 5), ando([fives(x)]))
+    disj(eqo(x, 5), ando do fives(x) end)
+  end
+
+  test "fives" do
+    goal = call_with_fresh &fives/1
+    stream = empty_state() |> goal.()
+    assert hd(stream) === state_c(1, %{var_c(0) => 5})
+    assert is_function tl(stream)
+  end
+
+  # with macros
+
+  test "a and b in macros" do
+    goal = fresh [a, b] do
+      eqo a, 7
+      oro do
+        eqo b, 5
+        eqo b, 6
+      end
+    end
+    stream = empty_state() |> goal.()
+    assert take_all(stream) === [
+      state_c(2, %{var_c(0) => 7, var_c(1) => 5}),
+      state_c(2, %{var_c(0) => 7, var_c(1) => 6}),
+    ]
+  end
+
 end
