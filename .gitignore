@@ -1,22 +1,24 @@
-dist/
-*.egg-info
+# The directory Mix will write compiled artifacts to.
+/_build/
 
-*.o
-*.so
+# If you run "mix test --cover", coverage assets end up here.
+/cover/
 
-*~
+# The directory Mix downloads your dependencies sources to.
+/deps/
 
-*#*
+# Where 3rd-party dependencies like ExDoc output generated docs.
+/doc/
 
-.#*
+# Ignore .fetch files in case you like to edit your project deps locally.
+/.fetch
 
-*.org_archive
+# If the VM crashes, it generates a dump, let's ignore it too.
+erl_crash.dump
 
-oprofile_data/
-gmon.out
+# Also ignore archive artifacts (built via "mix archive.build").
+*.ez
 
-core.jojo.*
-vgcore.*
+# Ignore package tarball (built via "mix hex.build").
+exo-*.tar
 
-__pycache__/
-.cache/

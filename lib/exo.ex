@@ -352,7 +352,7 @@ end
 
 ExUnit.start
 
-defmodule Exo.Text do
+defmodule Exo.Test do
   use ExUnit.Case, async: true
 
   import Exo
@@ -467,14 +467,17 @@ defmodule Exo.Text do
       fives(x)
     end
     |> (fn results ->
-      assert results === [5, 5, 5, 5, 5, 5, 5, 5, 5, 5] end).()
+      assert results === [5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+    end).()
   end
 
-  test "run" do
+  test "simple unification" do
     run 10, x do
-      [1, 2, "x"] <~> [1, 2, x]
+      [1, 2, 3] <~> [1, 2, x]
     end
-    |> IO.inspect
+    |> (fn results ->
+      assert results === [3]
+    end).()
   end
 
 end
