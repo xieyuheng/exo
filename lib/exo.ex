@@ -1,32 +1,39 @@
 defmodule Exo do
-
-  ### microkanren
+  @moduledoc """
+  Logic programming in elixir.
+  """
 
   defmodule Var do
     defstruct [
       id: 0
     ]
-  end
+    @type t :: %Var{id: integer}
 
-  def var_c(id) do
-    # -> Nat -- Var
-    %Var{id: id}
-  end
+    @spec c(integer) :: Var.t
+    def c(id) do
+      %Var{id: id}
+    end
 
-  def var?(x) do
-    # -> Any -- Bool
-    case x do
-      %Var{} -> true
-      _ -> false
+    @spec p(any) :: boolean
+    def p(x) do
+      case x do
+        %Var{} -> true
+        _ -> false
+      end
     end
   end
 
-  # Substitution = Var Term Map
+  @type value :: atom | integer | String.t | Var.t | [value]
+  @type substitution :: %{required(Var.t) => value}
 
+  @doc"""
+  One-step walking
+
+  Walking until the value is not Var.t,
+  which does not care about other vars in the result value.
+  """
+  @spec walk(value, substitution) :: value
   def walk(u, s) do
-    # walk until the term is not Var
-    #   does not care about other Vars in the result term
-    # -> Term, Substitution -- Term
     case u do
       %Var{} ->
         found = Map.get(s, u)
@@ -40,10 +47,8 @@ defmodule Exo do
     end
   end
 
+  @spec unify(substitution, value, value) :: substitution | false
   def unify(s, u, v) do
-    # -> Substitution, Term, Term
-    # -- | Substitution
-    #      False
     u = walk(u, s)
     v = walk(v, s)
     case {u, v} do
@@ -66,22 +71,33 @@ defmodule Exo do
       id_counter: 0,
       substitution: %{}
     ]
+    @type t :: %State{
+      id_counter: integer,
+      substitution: Exo.substitution
+    }
+
+    @spec c(integer, Exo.substitution) :: State.t
+    def c(c, s) do
+      %State{id_counter: c, substitution: s}
+    end
   end
 
-  def state_c(c, s) do
-    # -> Nat, Substitution -- State
-    %State{id_counter: c, substitution: s}
-  end
-
+  @spec empty_state() :: State.t
   def empty_state do
-    # -> -- State
-    %State{id_counter: 0, substitution: %{}}
+    State.c(0, %{})
   end
 
-  # Goal = (-> State -- StateStream)
+  @type state_stream ::
+          maybe_improper_list(State.t, state_stream)
+          | (-> state_stream)
 
+  @type goal :: (State.t -> state_stream)
+
+  @doc"""
+  Perform the unification.
+  """
+  @spec eqo(value, value) :: goal
   def eqo(u, v) do
-    # -> Trem, Trem -- Goal
     fn state ->
       s = unify(Map.get(state, :substitution), u, v)
       if s do
@@ -92,21 +108,25 @@ defmodule Exo do
     end
   end
 
+  @doc"""
+  Infix version of `eqo`.
+  """
+  @spec value <~> value :: goal
   def x <~> y do
     eqo(x, y)
   end
 
+  @spec call_with_fresh((Var.t -> goal)) :: goal
   def call_with_fresh(fun) do
-    # -> (-> Var -- Goal) -- Goal
     fn state ->
       id = Map.get(state, :id_counter)
-      goal = fun.(var_c(id))
+      goal = fun.(Var.c(id))
       goal.(%State{state | id_counter: id+1})
     end
   end
 
+  @spec disj(goal, goal) :: goal
   def disj(g1, g2) do
-    # -> Goal, Goal -- Goal
     fn state ->
       s1 = g1.(state)
       s2 = g2.(state)
@@ -114,16 +134,16 @@ defmodule Exo do
     end
   end
 
+  @spec conj(goal, goal) :: goal
   def conj(g1, g2) do
-    # -> Goal, Goal -- Goal
     fn state ->
       s1 = g1.(state)
       bind(s1, g2)
     end
   end
 
+  @spec mplus(state_stream, state_stream) :: state_stream
   def mplus(s1, s2) do
-    # -> StateStream, StateStream -- StateStream
     case s1 do
       [] -> s2
 
@@ -138,8 +158,8 @@ defmodule Exo do
     end
   end
 
+  @spec bind(state_stream, goal) :: state_stream
   def bind(s, g) do
-    # -> StateStream, Goal -- StateStream
     case s do
       [] -> []
 
@@ -150,8 +170,18 @@ defmodule Exo do
     end
   end
 
-  ### some macros
+  @doc"""
+  Invers-η-delay
 
+  The act of performing an inverse-η on a goal
+  and then wrapping its body in a lambda
+  we refer to as inverse-η-delay.
+
+  Invers-η-delay is an operation that
+  takes a goal and returns a goal,
+  as the result of doing so on any goal g
+  is a function from a state to a stream.
+  """
   defmacro zzz(g) do
     quote do
       fn state ->
@@ -162,22 +192,23 @@ defmodule Exo do
     end
   end
 
-  # ando do
-  #   g1
-  #   g2
-  #   g3
-  # end
+  @doc"""
+  A macro for conj -- the logic and.
 
-  # ==>
+  Example macro expanding :
 
-  # ando([g1, g2, g3])
+      ando do
+        g1
+        g2
+        g3
+      end
 
-  # ==>
+      # = expand to =>
 
-  # conj(zzz(g1),
-  #   conj(zzz(g2),
-  #     zzz(g3)))
-
+      conj(zzz(g1),
+        conj(zzz(g2),
+          zzz(g3)))
+  """
   defmacro ando(exp) do
     case exp do
       [do: {:__block__, _, list}] ->
@@ -202,6 +233,15 @@ defmodule Exo do
     end
   end
 
+  @doc"""
+  A macro for disj -- the logic or.
+
+  Just like ando.
+
+  - minikanren user should note that,
+    we do no implement the conde macro of minikanren,
+    we use oro instead.
+  """
   defmacro oro(exp) do
     case exp do
       [do: {:__block__, _, list}] ->
@@ -226,29 +266,31 @@ defmodule Exo do
     end
   end
 
-  # no conde
-  #   we use oro instead of conde for now
+  @doc"""
+  A macro to create fresh logic variables.
 
-  # fresh [a, b, c] do
-  #   g1
-  #   g2
-  #   g3
-  # end
+  Example macro expanding :
 
-  # ==>
+      fresh [a, b, c] do
+        g1
+        g2
+        g3
+      end
 
-  # call_with_fresh fn a ->
-  #   call_with_fresh fn b ->
-  #     call_with_fresh fn c ->
-  #       ando do
-  #         g1
-  #         g2
-  #         g3
-  #       end
-  #     end
-  #   end
-  # end
+      # = expand to =>
 
+      call_with_fresh fn a ->
+        call_with_fresh fn b ->
+          call_with_fresh fn c ->
+            ando do
+              g1
+              g2
+              g3
+            end
+          end
+        end
+      end
+  """
   defmacro fresh(var_list, exp) do
     case var_list do
       {_, _, atom} when is_atom(atom) ->
@@ -273,8 +315,7 @@ defmodule Exo do
     end
   end
 
-  ### state_stream to state_list
-
+  @spec pull(state_stream) :: state_stream
   def pull(state_stream) do
     if is_function(state_stream) do
       pull(state_stream.())
@@ -283,6 +324,7 @@ defmodule Exo do
     end
   end
 
+  @spec take_all(state_stream) :: [State.t]
   def take_all(state_stream) do
     state_stream = pull(state_stream)
     case state_stream do
@@ -291,6 +333,7 @@ defmodule Exo do
     end
   end
 
+  @spec take(state_stream, non_neg_integer) :: [State.t]
   def take(state_stream, n) do
     if n === 0 do
       []
@@ -303,22 +346,20 @@ defmodule Exo do
     end
   end
 
-  ### reification
-
+  @spec mk_reify([State.t]) :: [value]
   def mk_reify(state_list) do
-    # -> State List -- Reification List
     Enum.map(state_list, &reify_state_with_1st_var/1)
   end
 
+  @spec reify_state_with_1st_var(State.t) :: value
   def reify_state_with_1st_var(state) do
-    # -> State -- Reification
     s = Map.get(state, :substitution)
-    v = deep_walk(var_c(0), s)
+    v = deep_walk(Var.c(0), s)
     deep_walk(v, reify_s(v, []))
   end
 
+  @spec deep_walk(value, substitution) :: value
   def deep_walk(v, s) do
-    # -> Term, Substitution -- Term
     v = walk(v, s)
     case v do
       %Var{} -> v
@@ -327,8 +368,9 @@ defmodule Exo do
     end
   end
 
+  @spec reify_s(value, substitution) :: substitution
   def reify_s(v, s) do
-    # -> Term, Substitution -- Substitution
+    # -> value, Substitution -- Substitution
     case v do
       %Var{} ->
         n = reify_name(length(s))
@@ -340,18 +382,16 @@ defmodule Exo do
     end
   end
 
+  @spec reify_name(integer) :: atom
   def reify_name(n) do
-    # -> Nat -- Atom
     n
     |> Integer.to_string()
     |> (fn s -> "_" <> s end).()
     |> String.to_atom()
   end
 
-  ### user interface
-
+  @spec call_with_empty_state(goal) :: state_stream
   def call_with_empty_state(goal) do
-    # -> Goal -- StateStream
     goal.(empty_state())
   end
 
