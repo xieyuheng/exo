@@ -109,7 +109,7 @@ defmodule Exo do
   end
 
   @doc"""
-  Infix version of `eqo`.
+  Infix version of `eqo/2`.
   """
   @spec value <~> value :: goal
   def x <~> y do
@@ -193,7 +193,7 @@ defmodule Exo do
   end
 
   @doc"""
-  A macro for conj -- the logic and.
+  A macro for `conj/2` -- the logic and.
 
   Example macro expanding :
 
@@ -234,9 +234,9 @@ defmodule Exo do
   end
 
   @doc"""
-  A macro for disj -- the logic or.
+  A macro for `disj/2` -- the logic or.
 
-  Just like ando.
+  Just like `ando/1`.
 
   - minikanren user should note that,
     we do no implement the conde macro of minikanren,
