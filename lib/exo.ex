@@ -3,15 +3,17 @@ defmodule Exo do
   ### microkanren
 
   defmodule Var do
-    defstruct id: 0
+    defstruct [
+      id: 0
+    ]
   end
 
-  def var_c id do
+  def var_c(id) do
     # -> Nat -- Var
     %Var{id: id}
   end
 
-  def var? x do
+  def var?(x) do
     # -> Any -- Bool
     case x do
       %Var{} -> true
@@ -21,44 +23,52 @@ defmodule Exo do
 
   # Substitution = Var Term Map
 
-  def walk u, s do
+  def walk(u, s) do
     # walk until the term is not Var
     #   does not care about other Vars in the result term
     # -> Term, Substitution -- Term
     case u do
       %Var{} ->
-        found = Map.get s, u
+        found = Map.get(s, u)
         if found do
-          walk found, s
+          walk(found, s)
         else
           u
         end
+
       _ -> u
     end
   end
 
-  def unify u, v, s do
+  def unify(s, u, v) do
     # -> Term, Term, Substitution
     # -- | Substitution
     #      False
-    u = walk u, s
-    v = walk v, s
+    u = walk(u, s)
+    v = walk(v, s)
     case {u, v} do
       {%Var{id: id}, %Var{id: id}} -> s
-      {%Var{}, _} -> Map.put s, u, v
-      {_, %Var{}} -> Map.put s, v, u
+
+      {%Var{}, _} -> Map.put(s, u, v)
+
+      {_, %Var{}} -> Map.put(s, v, u)
+
       {[u_head | u_tail], [v_head | v_tail]} ->
-        s = unify u_head, v_head, s
-        s && unify u_tail, v_tail, s
+        s = unify(s, u_head, v_head)
+        s && unify(s, u_tail, v_tail)
+
       _ -> u === v && s
     end
   end
 
   defmodule State do
-    defstruct id_counter: 0, substitution: %{}
+    defstruct [
+      id_counter: 0,
+      substitution: %{}
+    ]
   end
 
-  def state_c c, s do
+  def state_c(c, s) do
     # -> Nat, Substitution -- State
     %State{id_counter: c, substitution: s}
   end
@@ -70,10 +80,10 @@ defmodule Exo do
 
   # Goal = (-> State -- StateStream)
 
-  def eqo u, v do
+  def eqo(u, v) do
     # -> Trem, Trem -- Goal
     fn state ->
-      s = unify u, v, Map.get(state, :substitution)
+      s = unify(Map.get(state, :substitution), u, v)
       if s do
         [%State{state | substitution: s}]
       else
@@ -83,10 +93,10 @@ defmodule Exo do
   end
 
   def x <~> y do
-    eqo x, y
+    eqo(x, y)
   end
 
-  def call_with_fresh fun do
+  def call_with_fresh(fun) do
     # -> (-> Var -- Goal) -- Goal
     fn state ->
       id = Map.get(state, :id_counter)
@@ -95,50 +105,54 @@ defmodule Exo do
     end
   end
 
-  def disj g1, g2 do
+  def disj(g1, g2) do
     # -> Goal, Goal -- Goal
     fn state ->
       s1 = g1.(state)
       s2 = g2.(state)
-      mplus s1, s2
+      mplus(s1, s2)
     end
   end
 
-  def conj g1, g2 do
+  def conj(g1, g2) do
     # -> Goal, Goal -- Goal
     fn state ->
       s1 = g1.(state)
-      bind s1, g2
+      bind(s1, g2)
     end
   end
 
-  def mplus s1, s2 do
+  def mplus(s1, s2) do
     # -> StateStream, StateStream -- StateStream
     case s1 do
       [] -> s2
-      trunk when trunk |> is_function ->
+
+      trunk when is_function(trunk) ->
         # use interleaving
         #   to implement a complete search strategy
         # ><><><
         #   maybe we can use actor model to parallelize this
-        fn -> mplus s2, trunk.() end
+        fn -> mplus(s2, trunk.()) end
+
       [head | tail] -> [head | mplus(tail, s2)]
     end
   end
 
-  def bind s, g do
+  def bind(s, g) do
     # -> StateStream, Goal -- StateStream
     case s do
       [] -> []
-      trunk when trunk |> is_function ->
-        fn -> bind trunk.(), g end
-      [head | tail] -> mplus g.(head), bind(tail, g)
+
+      trunk when is_function(trunk) ->
+        fn -> bind(trunk.(), g) end
+
+      [head | tail] -> mplus(g.(head), bind(tail, g))
     end
   end
 
   ### some macros
 
-  defmacro zzz g do
+  defmacro zzz(g) do
     quote do
       fn state ->
         fn ->
@@ -164,20 +178,23 @@ defmodule Exo do
   #   conj(zzz(g2),
   #     zzz(g3)))
 
-  defmacro ando exp do
+  defmacro ando(exp) do
     case exp do
       [do: {:__block__, _, list}] ->
         quote do
           ando(unquote(list))
         end
+
       [do: single] ->
         quote do
           ando(unquote([single]))
         end
+
       [head | []] ->
         quote do
           zzz(unquote(head))
         end
+
       [head | tail] ->
         quote do
           conj(zzz(unquote(head)), ando(unquote(tail)))
@@ -185,20 +202,23 @@ defmodule Exo do
     end
   end
 
-  defmacro oro exp do
+  defmacro oro(exp) do
     case exp do
       [do: {:__block__, _, list}] ->
         quote do
           oro(unquote(list))
         end
+
       [do: single] ->
         quote do
           oro(unquote([single]))
         end
+
       [head | []] ->
         quote do
           zzz(unquote(head))
         end
+
       [head | tail] ->
         quote do
           disj(zzz(unquote(head)), oro(unquote(tail)))
@@ -229,19 +249,21 @@ defmodule Exo do
   #   end
   # end
 
-  defmacro fresh var_list, exp do
+  defmacro fresh(var_list, exp) do
     case var_list do
       {_, _, atom} when is_atom(atom) ->
         var_list = [var_list]
         quote do
           fresh(unquote(var_list), unquote(exp))
         end
+
       [var | []] ->
         quote do
           call_with_fresh fn unquote(var) ->
             ando(unquote(exp))
           end
         end
+
       [var | tail] ->
         quote do
           call_with_fresh fn unquote(var) ->
@@ -253,7 +275,7 @@ defmodule Exo do
 
   ### state_stream to state_list
 
-  def pull state_stream do
+  def pull(state_stream) do
     if is_function(state_stream) do
       pull(state_stream.())
     else
@@ -261,7 +283,7 @@ defmodule Exo do
     end
   end
 
-  def take_all state_stream do
+  def take_all(state_stream) do
     state_stream = pull(state_stream)
     case state_stream do
       [] -> []
@@ -269,35 +291,35 @@ defmodule Exo do
     end
   end
 
-  def take n, state_stream do
+  def take(state_stream, n) do
     if n === 0 do
       []
     else
       state_stream = pull(state_stream)
       case state_stream do
         [] -> []
-        [head | tail] -> [head | take(n-1, tail)]
+        [head | tail] -> [head | take(tail, n-1)]
       end
     end
   end
 
   ### reification
 
-  def mk_reify state_list do
+  def mk_reify(state_list) do
     # -> State List -- Reification List
-    state_list |> Enum.map(&reify_state_with_1st_var/1)
+    Enum.map(state_list, &reify_state_with_1st_var/1)
   end
 
-  def reify_state_with_1st_var state do
+  def reify_state_with_1st_var(state) do
     # -> State -- Reification
     substitution = Map.get(state, :substitution)
     v = deep_walk(var_c(0), substitution)
     deep_walk(v, reify_s(v, []))
   end
 
-  def deep_walk v, s do
+  def deep_walk(v, s) do
     # -> Term, Substitution -- Term
-    v = walk v, s
+    v = walk(v, s)
     case v do
       %Var{} -> v
       [head | tail] -> [deep_walk(head, s) | deep_walk(tail, s)]
@@ -305,45 +327,49 @@ defmodule Exo do
     end
   end
 
-  def reify_s v, s do
+  def reify_s(v, s) do
     # -> Term, Substitution -- Substitution
     case v do
       %Var{} ->
         n = reify_name(length(s))
         [[v | n] | s]
+
       [head | tail] -> reify_s(tail, reify_s(head, s))
+
       _ -> s
     end
   end
 
-  def reify_name n do
+  def reify_name(n) do
     # -> Nat -- Atom
     n
-    |> Integer.to_string
+    |> Integer.to_string()
     |> (fn s -> "_" <> s end).()
-    |> String.to_atom
+    |> String.to_atom()
   end
 
   ### user interface
 
-  def call_with_empty_state goal do
+  def call_with_empty_state(goal) do
     # -> Goal -- StateStream
     empty_state() |> goal.()
   end
 
-  defmacro run n, var, exp do
+  defmacro run(n, var, exp) do
     quote do
-      goal = fresh(unquote(var), unquote(exp))
-      take(unquote(n), call_with_empty_state(goal))
-      |> mk_reify
+      fresh(unquote(var), unquote(exp))
+      |> call_with_empty_state()
+      |> take(unquote(n))
+      |> mk_reify()
     end
   end
 
-  defmacro run_all var, exp do
+  defmacro run_all(var, exp) do
     quote do
-      goal = fresh(unquote(var), unquote(exp))
-      take_all(call_with_empty_state(goal))
-      |> mk_reify
+      fresh(unquote(var), unquote(exp))
+      |> call_with_empty_state()
+      |> take_all()
+      |> mk_reify()
     end
   end
 

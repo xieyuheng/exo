@@ -4,58 +4,64 @@ defmodule ExoTest do
   import Exo
 
   test "var" do
-    assert var_c(0) |> var?
-    assert var_c(1) |> var?
-    assert var_c(2) |> var?
+    assert var_c(0) |> var?()
+    assert var_c(1) |> var?()
+    assert var_c(2) |> var?()
     assert var_c(0) === var_c(0)
   end
 
   test "unify" do
-    s = unify [:a, :b, :c], [:a, :b, :c], %{}
+    s = unify(%{},
+      [:a, :b, :c],
+      [:a, :b, :c])
     assert s === %{}
 
-    s = unify [[:a, :b, :c],
-               [:a, :b, :c],
-               [:a, :b, :c]],
+    s = unify(%{},
       [[:a, :b, :c],
        [:a, :b, :c],
-       [:a, :b, :c]], %{}
+       [:a, :b, :c]],
+      [[:a, :b, :c],
+       [:a, :b, :c],
+       [:a, :b, :c]])
     assert s === %{}
 
-    s = unify [var_c(0), :b, :c], [:a, :b, :c], %{}
+    s = unify(%{},
+      [var_c(0), :b, :c],
+      [:a, :b, :c])
     assert s === %{var_c(0) => :a}
 
-    s = unify [[var_c(0), :b, :c],
-               [:a, var_c(1), :c],
-               [:a, :b, var_c(2)]],
+    s = unify(%{},
+      [[var_c(0), :b, :c],
+       [:a, var_c(1), :c],
+       [:a, :b, var_c(2)]],
       [[:a, :b, :c],
        [:a, :b, :c],
-       [:a, :b, :c]], %{}
+       [:a, :b, :c]])
     assert s === %{var_c(0) => :a,
                    var_c(1) => :b,
                    var_c(2) => :c}
   end
 
   test "goal" do
-    goal = call_with_fresh fn a -> eqo a, 5 end
+    goal = call_with_fresh fn a -> eqo(a, 5) end
     state_stream = empty_state() |> goal.()
     assert state_stream === [state_c(1, %{var_c(0) => 5})]
 
-    goal = eqo [1, 2, 3], [1, 2, 3]
+    goal = eqo([1, 2, 3], [1, 2, 3])
     state_stream = empty_state() |> goal.()
     assert state_stream === [state_c(0, %{})]
 
-    goal = eqo [1, 2, 3], [3, 2, 1]
+    goal = eqo([1, 2, 3], [3, 2, 1])
     state_stream = empty_state() |> goal.()
     assert state_stream === []
   end
 
   def a_and_b do
-    g1 = call_with_fresh fn a -> eqo a, 7 end
+    g1 = call_with_fresh fn a -> eqo(a, 7) end
     g2 = call_with_fresh fn b ->
       disj(eqo(b, 5), eqo(b, 6))
     end
-    conj g1, g2
+    conj(g1, g2)
   end
 
   test "a and b" do
@@ -85,7 +91,7 @@ defmodule ExoTest do
   end
 
   test "fives" do
-    goal = call_with_fresh &fives/1
+    goal = call_with_fresh(&fives/1)
     state_stream = empty_state() |> goal.()
     assert hd(state_stream) === state_c(1, %{var_c(0) => 5})
     assert is_function tl(state_stream)
