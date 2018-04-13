@@ -41,7 +41,7 @@ defmodule Exo do
   end
 
   def unify(s, u, v) do
-    # -> Term, Term, Substitution
+    # -> Substitution, Term, Term
     # -- | Substitution
     #      False
     u = walk(u, s)
@@ -312,8 +312,8 @@ defmodule Exo do
 
   def reify_state_with_1st_var(state) do
     # -> State -- Reification
-    substitution = Map.get(state, :substitution)
-    v = deep_walk(var_c(0), substitution)
+    s = Map.get(state, :substitution)
+    v = deep_walk(var_c(0), s)
     deep_walk(v, reify_s(v, []))
   end
 
@@ -352,7 +352,7 @@ defmodule Exo do
 
   def call_with_empty_state(goal) do
     # -> Goal -- StateStream
-    empty_state() |> goal.()
+    goal.(empty_state())
   end
 
   defmacro run(n, var, exp) do
