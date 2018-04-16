@@ -238,7 +238,7 @@ defmodule Exo do
 
   Just like `ando/1`.
 
-  - minikanren user should note that,
+  - minikanren users should note that,
     we do no implement the conde macro of minikanren,
     we use oro instead.
   """
@@ -355,7 +355,7 @@ defmodule Exo do
   def reify_state_with_1st_var(state) do
     s = Map.get(state, :substitution)
     v = deep_walk(Var.c(0), s)
-    deep_walk(v, reify_s(v, []))
+    deep_walk(v, reify_s(v, %{}))
   end
 
   @spec deep_walk(value, substitution) :: value
@@ -373,8 +373,7 @@ defmodule Exo do
     # -> value, Substitution -- Substitution
     case v do
       %Var{} ->
-        n = reify_name(length(s))
-        [[v | n] | s]
+        Map.put(s, v, reify_name(length(Map.keys(s))))
 
       [head | tail] -> reify_s(tail, reify_s(head, s))
 
@@ -411,6 +410,20 @@ defmodule Exo do
       |> take_all()
       |> mk_reify()
     end
+  end
+
+  @doc"""
+  A goal that succeeds.
+  """
+  def succeed do
+    fn state -> [state] end
+  end
+
+  @doc"""
+  A goal that fails.
+  """
+  def fail do
+    fn _state -> [] end
   end
 
 end

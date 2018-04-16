@@ -5,6 +5,10 @@ defmodule ExoTest do
   alias Exo.Var
   alias Exo.State
 
+  def assert_eq(x, y) do
+    assert x === y
+  end
+
   test "var" do
     assert Var.p(Var.c(0))
     assert Var.p(Var.c(1))
@@ -120,18 +124,51 @@ defmodule ExoTest do
     run 10, x do
       fives(x)
     end
-    |> (fn results ->
-      assert results === [5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
-    end).()
+    |> assert_eq([5, 5, 5, 5, 5, 5, 5, 5, 5, 5])
   end
 
   test "simple unification" do
     run 10, x do
       [1, 2, 3] <~> [1, 2, x]
     end
-    |> (fn results ->
-      assert results === [3]
-    end).()
+    |> assert_eq([3])
   end
+
+  test "oro 1 2 3" do
+    run_all q do
+      oro do
+        q <~> 1
+        q <~> 2
+        q <~> 3
+      end
+    end
+    |> assert_eq([1, 2, 3])
+  end
+
+  test "fail" do
+    run_all _ do
+      fail()
+    end
+    |> assert_eq([])
+  end
+
+
+  test "succeed" do
+    run_all _ do
+      succeed()
+    end
+    |> assert_eq([:_0])
+  end
+
+  # ><><><
+  # without (let)
+  #   we need to support the following syntax
+
+  # test "let in run" do
+  #   run_all q do
+  #     x = 1
+  #     eqo(1, q)
+  #   end
+  # end
 
 end
