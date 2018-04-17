@@ -1,5 +1,5 @@
 defmodule TheReasonedTest do
-  use ExUnit.Case#, async: true
+  use ExUnit.Case, async: true
 
   import Exo
   import TheReasoned
@@ -148,6 +148,64 @@ defmodule TheReasonedTest do
         end
       end
       |> assert_eq([true])
+
+      run _ do
+        oro do
+          fail()
+          succeed()
+        end
+      end
+      |> assert_eq([:_0])
+
+      run _ do
+        oro do
+          ando do succeed(); succeed() end
+          ando do fail(); fail() end
+        end
+      end
+      |> assert_eq([:_0])
+
+      run x do
+        oro do
+          ando do :olive <~> x; succeed() end
+          ando do :oil <~> x; succeed() end
+          ando do fail(); fail() end
+        end
+      end
+      |> assert_eq([:olive, :oil])
+
+      run x do
+        oro do
+          :olive <~> x
+          :oil <~> x
+        end
+      end
+      |> assert_eq([:olive, :oil])
+
+      run x do
+        oro do
+          ando do :virgin <~> x; fail() end
+          ando do :olive <~> x; succeed() end
+          ando do succeed(); succeed() end
+          ando do :oil <~> x; succeed() end
+          ando do fail(); fail() end
+        end
+      end
+      |> assert_eq([:olive, :_0, :oil])
+
+      run 2, x do
+        oro do
+          ando do :extra <~> x; succeed() end
+          ando do :virgin <~> x; fail() end
+          ando do :olive <~> x; succeed() end
+          ando do :oil <~> x; succeed() end
+          ando do fail(); fail() end
+        end
+      end
+      |> assert_eq([:extra, :olive])
+
+      # ><><><
+      # frame 53
 
     end
   end
