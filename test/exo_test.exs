@@ -152,23 +152,11 @@ defmodule ExoTest do
     |> assert_eq([])
   end
 
-
   test "succeed" do
     run_all _ do
       succeed()
     end
     |> assert_eq([:_0])
   end
-
-  # ><><><
-  # without (let)
-  #   we need to support the following syntax
-
-  # test "let in run" do
-  #   run_all q do
-  #     x = 1
-  #     eqo(1, q)
-  #   end
-  # end
 
 end
