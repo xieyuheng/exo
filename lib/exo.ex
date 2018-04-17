@@ -403,7 +403,7 @@ defmodule Exo do
     end
   end
 
-  defmacro run_all(var, exp) do
+  defmacro run(var, exp) do
     quote do
       fresh(unquote(var), unquote(exp))
       |> call_with_empty_state()
@@ -425,5 +425,4 @@ defmodule Exo do
   def fail do
     fn _state -> [] end
   end
-
 end

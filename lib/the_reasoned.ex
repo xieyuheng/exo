@@ -74,5 +74,4 @@ defmodule TheReasoned do
       conso(s, [], out)
     end
   end
-
 end

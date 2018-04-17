@@ -11,4 +11,6 @@
 
 - learn from prolog
 
+- the relation between judgment as type
+
 - seeking for more usage

@@ -135,7 +135,7 @@ defmodule ExoTest do
   end
 
   test "oro 1 2 3" do
-    run_all q do
+    run q do
       oro do
         q <~> 1
         q <~> 2
@@ -146,17 +146,16 @@ defmodule ExoTest do
   end
 
   test "fail" do
-    run_all _ do
+    run _ do
       fail()
     end
     |> assert_eq([])
   end
 
   test "succeed" do
-    run_all _ do
+    run _ do
       succeed()
     end
     |> assert_eq([:_0])
   end
-
 end
