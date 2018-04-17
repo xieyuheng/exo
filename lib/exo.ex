@@ -36,11 +36,9 @@ defmodule Exo do
   def walk(u, s) do
     case u do
       %Var{} ->
-        found = Map.get(s, u)
-        if found do
-          walk(found, s)
-        else
-          u
+        case Map.fetch(s, u) do
+          {:ok, v} -> walk(v, s)
+          :error -> u
         end
 
       _ -> u
@@ -370,13 +368,9 @@ defmodule Exo do
 
   @spec reify_s(value, substitution) :: substitution
   def reify_s(v, s) do
-    # -> value, Substitution -- Substitution
     case v do
-      %Var{} ->
-        Map.put(s, v, reify_name(length(Map.keys(s))))
-
+      %Var{} -> Map.put(s, v, reify_name(length(Map.keys(s))))
       [head | tail] -> reify_s(tail, reify_s(head, s))
-
       _ -> s
     end
   end

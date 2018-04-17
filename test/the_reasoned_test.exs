@@ -37,6 +37,37 @@ defmodule TheReasonedTest do
         :corn <~> r
       end
       |> assert_eq([:corn])
+
+      run r do
+        fail()
+        :corn <~> r
+      end
+      |> assert_eq([])
+
+      run q do
+        false <~> q
+      end
+      |> assert_eq([false])
+
+      run q do
+        nil <~> q
+      end
+      |> assert_eq([nil])
+
+      run q do
+        [] <~> q
+      end
+      |> assert_eq([[]])
+
+      run q do
+        "" <~> q
+      end
+      |> assert_eq([""])
+
+      run q do
+        '' <~> q
+      end
+      |> assert_eq([''])
     end
   end
 
