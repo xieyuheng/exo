@@ -9,7 +9,6 @@ defmodule TheReasoned do
     [a | d]
   end
 
-
   def conso(a, d, p) do
     cons(a, d) <~> p
   end

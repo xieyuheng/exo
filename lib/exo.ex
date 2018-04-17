@@ -23,6 +23,9 @@ defmodule Exo do
     end
   end
 
+  @typedoc"""
+  ><><><
+  """
   @type value :: atom | integer | String.t | Var.t | [value]
   @type substitution :: %{required(Var.t) => value}
 

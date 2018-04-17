@@ -1,5 +1,5 @@
 defmodule TheReasonedTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case#, async: true
 
   import Exo
   import TheReasoned
@@ -64,10 +64,91 @@ defmodule TheReasonedTest do
       end
       |> assert_eq([""])
 
+      x = false
       run q do
-        '' <~> q
+        x <~> q
       end
-      |> assert_eq([''])
+      |> assert_eq([false])
+
+      run q do
+        fresh [x] do
+          true <~> x
+          true <~> q
+        end
+      end
+      |> assert_eq([true])
+
+      run q do
+        fresh [x] do
+          x <~> true
+          true <~> q
+        end
+      end
+      |> assert_eq([true])
+
+      run q do
+        fresh [x] do
+          x <~> true
+          q <~> true
+        end
+      end
+      |> assert_eq([true])
+
+      run _ do
+        succeed()
+      end
+      |> assert_eq([:_0])
+
+      run r do
+        fresh [x, y] do
+          cons(x, cons(y, [])) <~> r
+        end
+      end
+      |> assert_eq([[:_0, :_1]])
+
+      # run r do
+      #   fresh [x, y] do
+      #     cons(x, cons(y, cons(x, []))) <~> r
+      #   end
+      # end
+      # |> assert_eq([[:_0, :_1, :_0]])
+      # # why [[:_2, :_1, :_2]] ?
+
+      run q do
+        false <~> q
+        true <~> q
+      end
+      |> assert_eq([])
+
+      run q do
+        false <~> q
+        false <~> q
+      end
+      |> assert_eq([false])
+
+      run r do
+        fresh x do
+          x <~> r
+        end
+      end
+      |> assert_eq([:_0])
+
+      run q do
+        fresh x do
+          true <~> x
+          x <~> q
+        end
+      end
+      |> assert_eq([true])
+
+      run q do
+        fresh x do
+          x <~> q
+          true <~> x
+        end
+      end
+      |> assert_eq([true])
+
     end
   end
 
