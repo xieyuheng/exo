@@ -9,7 +9,7 @@ defmodule TheReasonedTest do
   end
 
   describe "(1. Playthings)" do
-    test "intro" do
+    test "1:1-55" do
       run _ do
         fail()
       end
@@ -101,14 +101,14 @@ defmodule TheReasonedTest do
 
       run r do
         fresh [x, y] do
-          cons(x, cons(y, [])) <~> r
+          [x, y] <~> r
         end
       end
       |> assert_eq([[:_0, :_1]])
 
       # run r do
       #   fresh [x, y] do
-      #     cons(x, cons(y, cons(x, []))) <~> r
+      #     [x, y, x] <~> r
       #   end
       # end
       # |> assert_eq([[:_0, :_1, :_0]])
@@ -204,9 +204,146 @@ defmodule TheReasonedTest do
       end
       |> assert_eq([:extra, :olive])
 
-      # ><><><
-      # frame 53
+      run r do
+        fresh [x, y] do
+          :split <~> x
+          :pea <~> y
+          [x, y] <~> r
+        end
+      end
+      |> assert_eq([[:split, :pea]])
 
+      run r do
+        fresh [x, y] do
+          oro do
+            ando do :split <~> x; :pea <~> y end
+            ando do :navy <~> x; :bean <~> y end
+          end
+          [x, y] <~> r
+        end
+      end
+      |> assert_eq([[:split, :pea], [:navy, :bean]])
+
+      run r do
+        fresh [x, y] do
+          oro do
+            ando do :split <~> x; :pea <~> y end
+            ando do :navy <~> x; :bean <~> y end
+          end
+          [x, y, :soup] <~> r
+        end
+      end
+      |> assert_eq([[:split, :pea, :soup], [:navy, :bean, :soup]])
+    end
+
+    def teacupo(x) do
+      oro do
+        :tea <~> x
+        :cup <~> x
+      end
+    end
+
+    test "1:56 teacupo" do
+      run x do
+        teacupo(x)
+      end
+      |> assert_eq([:tea, :cup])
+    end
+
+    test "1:57 calling teacupo" do
+      run r do
+        fresh [x, y] do
+          oro do
+            ando do teacupo(x); true <~> y; succeed() end
+            ando do false <~> x; true <~> y; succeed() end
+            ando do fail(); fail() end
+          end
+          [x, y] <~> r
+        end
+      end
+      |> assert_eq([[:tea, true], [:cup, true], [:false, true]])
+    end
+
+    test "1:58 by oro" do
+      run r do
+        fresh [x, y, z] do
+          oro do
+            ando do y <~> x; fresh [x] do z <~> x end end
+            ando do fresh [x] do y <~> x end; z <~> x end
+          end
+          [y, z] <~> r
+        end
+      end
+      |> assert_eq([[:_0, :_1], [:_0, :_1]])
+    end
+
+    test "1:58 by conde" do
+      run r do
+        fresh [x, y, z] do
+          conde do
+            [ y <~> x,  fresh [x] do z <~> x end ]
+            [ fresh [x] do y <~> x end,  z <~> x ]
+          end
+          [y, z] <~> r
+        end
+      end
+      |> assert_eq([[:_0, :_1], [:_0, :_1]])
+    end
+
+    test "1:59 by conde" do
+      run r do
+        fresh [x, y, z] do
+          conde do
+            [ y <~> x,  fresh [x] do z <~> x end ]
+            [ fresh [x] do y <~> x end,  z <~> x ]
+          end
+          x <~> false
+          [y, z] <~> r
+        end
+      end
+      |> assert_eq([[false, :_0], [:_0, false]])
+    end
+
+    test "1:60" do
+      run q do
+        with a = true <~> q,
+             _b = false <~> q,
+          do: a
+      end
+      |> assert_eq([true])
+
+      run q do
+        with _a = true <~> q,
+             b = false <~> q,
+          do: b
+      end
+      |> assert_eq([false])
+    end
+
+    test "1:61" do
+      run q do
+        with a = true <~> q,
+             _b = (fresh [x] do x <~> q; false <~> x end),
+             _c = (conde do [true <~> q]; [false <~> q] end),
+          do: a
+      end
+      |> assert_eq([true])
+
+      run q do
+        with _a = true <~> q,
+             b = (fresh [x] do x <~> q; false <~> x end),
+             _c = (conde do [true <~> q]; [false <~> q] end),
+          do: b
+      end
+      |> assert_eq([false])
+
+      run q do
+        with _a = true <~> q,
+             _b = (fresh [x] do x <~> q; false <~> x end),
+             c = (conde do [true <~> q]; [false <~> q] end),
+          do: c
+      end
+      |> assert_eq([true, false])
     end
   end
 
@@ -264,4 +401,5 @@ defmodule TheReasonedTest do
     end
     |> assert_eq([[2, 3]])
   end
+
 end

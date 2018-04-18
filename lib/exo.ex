@@ -24,7 +24,7 @@ defmodule Exo do
   end
 
   @typedoc"""
-  ><><><
+  We tried to support all unifiable datatype of elixir.
   """
   @type value :: atom | integer | String.t | Var.t | [value]
   @type substitution :: %{required(Var.t) => value}
@@ -111,6 +111,9 @@ defmodule Exo do
 
   @doc"""
   Infix version of `eqo/2`.
+
+            The Law of <~>
+      v <~> w  is the same as  w <~> v.
   """
   @spec value <~> value :: goal
   def x <~> y do
@@ -149,11 +152,12 @@ defmodule Exo do
       [] -> s2
 
       trunk when is_function(trunk) ->
-        # use interleaving
+        # - to use interleaving :
         #   to implement a complete search strategy
-        # ><><><
-        #   maybe we can use actor model to parallelize this
-        fn -> mplus(s2, trunk.()) end
+        #   ><><>< maybe we can use actor model to parallelize this
+        # fn -> mplus(s2, trunk.()) end
+        # - no interleaving :
+        fn -> mplus(trunk.(), s2) end
 
       [head | tail] -> [head | mplus(tail, s2)]
     end
@@ -238,10 +242,6 @@ defmodule Exo do
   A macro for `disj/2` -- the logic or.
 
   Just like `ando/1`.
-
-  - minikanren users should note that,
-    we do no implement the conde macro of minikanren,
-    we use oro instead.
   """
   defmacro oro(exp) do
     case exp do
@@ -269,6 +269,10 @@ defmodule Exo do
 
   @doc"""
   A macro to create fresh logic variables.
+
+            The Law of Fresh
+      If x is fresh, then  v <~> x  succeeds
+      and associates x with v.
 
   Example macro expanding :
 
@@ -312,6 +316,44 @@ defmodule Exo do
           call_with_fresh fn unquote(var) ->
             fresh(unquote(tail), unquote(exp))
           end
+        end
+    end
+  end
+
+  @doc"""
+  A macro for a list `ando/1` in `oro/1`.
+
+            The Law of conde
+      To get more values from conde ,
+      pretend that the successful conde
+      line has failed, refreshing all variables
+      that got an association from that line.
+
+  - conde is written conde and is pronounced “con-dee”.
+
+  - conde is the default control mechanism of Prolog.
+    See William F. Clocksin. Clause and Effect. Springer, 1997.
+  """
+  defmacro conde(exp) do
+    case exp do
+      [do: {:__block__, _, list}] ->
+        quote do
+          conde(unquote(list))
+        end
+
+      [do: single] ->
+        quote do
+          conde(unquote([single]))
+        end
+
+      [exp_list | []] ->
+        quote do
+          ando(unquote(exp_list))
+        end
+
+      [exp_list | tail] ->
+        quote do
+          disj(zzz(ando(unquote(exp_list))), conde(unquote(tail)))
         end
     end
   end

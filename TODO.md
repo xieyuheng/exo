@@ -2,6 +2,8 @@
 
 ## todo-stack
 
+- numbering tests by frames in (1. Playthings)
+
 - be strict about value type
 
 - reread the reasoned schemer
