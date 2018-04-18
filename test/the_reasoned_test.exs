@@ -477,7 +477,263 @@ defmodule TheReasonedTest do
   end
 
   describe "(2. Teaching Old Toys New Tricks)" do
+    test "2:1" do
+      with x = fn a -> a end,
+           y = :c do
+        x.(y)
+      end
+      |> assert_eq(:c)
+    end
 
+    test "2:6" do
+      run r do
+        caro([:a, :c, :o, :r, :n], r)
+      end
+      |> assert_eq([:a])
+    end
+
+    test "2:7" do
+      run q do
+        caro([:a, :c, :o, :r, :n], :a)
+        true <~> q
+      end
+      |> assert_eq([true])
+    end
+
+    test "2:8" do
+      run r do
+        fresh [x, y] do
+          caro([r, y], x)
+          :pear <~> x
+        end
+      end
+      |> assert_eq([:pear])
+    end
+
+    test "2:10" do
+      cons(car([:grape, :raisin, :pear]), car([[:a], [:b], [:c]]))
+      |> assert_eq([:grape, :a])
+    end
+
+    test "2:11" do
+      run r do
+        fresh [x, y] do
+          caro([:grape, :raisin, :pear], x)
+          caro([[:a], [:b], [:c]], y)
+          cons(x, y) <~> r
+        end
+      end
+      |> assert_eq([[:grape, :a]])
+    end
+
+    test "2:14" do
+      car(cdr([:a, :c, :o, :r, :n]))
+      |> assert_eq(:c)
+    end
+
+    test "2:15 note about the unnesting" do
+      run r do
+        fresh [v] do
+          cdro([:a, :c, :o, :r, :n], v)
+          caro(v, r)
+        end
+      end
+      |> assert_eq([:c])
+    end
+
+    test "2:17" do
+      cons(cdr([:grape, :raisin, :pear]), car([[:a], [:b], [:c]]))
+      |> assert_eq([[:raisin, :pear], :a])
+    end
+
+    test "2:18" do
+      run r do
+        fresh [x, y] do
+          cdro([:grape, :raisin, :pear], x)
+          caro([[:a], [:b], [:c]], y)
+          cons(x, y) <~> r
+        end
+      end
+      |> assert_eq([[[:raisin, :pear], :a]])
+    end
+
+    test "2:19" do
+      run q do
+        cdro([:a, :c, :o, :r, :n], [:c, :o, :r, :n])
+        true <~> q
+      end
+      |> assert_eq([true])
+    end
+
+    test "2:20" do
+      run x do
+        cdro([:c, :o, :r, :n], [x, :r, :n])
+      end
+      |> assert_eq([:o])
+    end
+
+    test "2:21" do
+      run l do
+        fresh [x] do
+          cdro(l, [:c, :o, :r, :n])
+          caro(l, x)
+          :a <~> x
+        end
+      end
+      |> assert_eq([[:a, :c, :o, :r, :n]])
+    end
+
+    test "2:22" do
+      run l do
+        conso([:a, :b, :c], [:d, :e], l)
+      end
+      |> assert_eq([[[:a, :b, :c], :d, :e]])
+    end
+
+    test "2:23" do
+      run x do
+        conso(x, [:a, :b, :c], [:d, :a, :b, :c])
+      end
+      |> assert_eq([:d])
+    end
+
+    test "2:24" do
+      run r do
+        fresh [x, y, z] do
+          [:e, :a, :d, x] <~> r
+          conso(y, [:a, z, :c], r)
+        end
+      end
+      |> assert_eq([[:e, :a, :d, :c]])
+    end
+
+    test "2:25" do
+      run x do
+        conso(x, [:a, x, :c], [:d, :a, x, :c])
+      end
+      |> assert_eq([:d])
+    end
+
+    test "2:26" do
+      run l do
+        fresh [x] do
+          [:d, :a, x, :c] <~> l
+          conso(x, [:a, x, :c], l)
+        end
+      end
+      |> assert_eq([[:d, :a, :d, :c]])
+    end
+
+    test "2:27" do
+      run l do
+        fresh [x] do
+          conso(x, [:a, x, :c], l)
+          [:d, :a, x, :c] <~> l
+        end
+      end
+      |> assert_eq([[:d, :a, :d, :c]])
+    end
+
+    test "2:29" do
+      run l do
+        fresh [d, x, y, w, s] do
+          conso(w, [:a, :n, :s], s)
+          cdro(l, s)
+          caro(l, x)
+          :b <~> x
+          cdro(l, d)
+          caro(d, y)
+          :e <~> y
+        end
+      end
+      |> assert_eq([[:b, :e, :a, :n, :s]])
+    end
+
+    test "2:32" do
+      run q do
+        nullo([:grape, :raisin, :pear])
+        true <~> q
+      end
+      |> assert_eq([])
+    end
+
+    test "2:33" do
+      run q do
+        nullo([])
+        true <~> q
+      end
+      |> assert_eq([true])
+    end
+
+    test "2:34" do
+      run x do
+        nullo(x)
+      end
+      |> assert_eq([[]])
+    end
+
+    test "2:38" do
+      run q do
+        eqo(:pear, :plum)
+        true <~> q
+      end
+      |> assert_eq([])
+    end
+
+    test "2:39" do
+      run q do
+        eqo(:plum, :plum)
+        true <~> q
+      end
+      |> assert_eq([true])
+    end
+
+    test "2:52" do
+      run r do
+        fresh [x, y] do
+          [x, y, :salad] <~> r
+        end
+      end
+      |> assert_eq([[:_0, :_1, :salad]])
+    end
+
+    test "2:54" do
+      run q do
+        pairo(cons(q, q))
+        true <~> q
+      end
+      |> assert_eq([true])
+    end
+
+    test "2:55" do
+      run q do
+        pairo([])
+        true <~> q
+      end
+      |> assert_eq([])
+    end
+
+    test "2:56" do
+      run q do
+        pairo(:pair)
+        true <~> q
+      end
+      |> assert_eq([])
+    end
+
+    test "2:57" do
+      run x do
+        pairo(x)
+      end
+      |> assert_eq([[:_0 | :_1]])
+    end
+
+    test "2:58" do
+      run r do
+        pairo([r, :pair])
+      end
+      |> assert_eq([:_0])
+    end
   end
 
   describe "(3. Seeing Old Friends in New Ways)" do
@@ -511,24 +767,4 @@ defmodule TheReasonedTest do
   describe "(10. Thin Ice)" do
 
   end
-
-  test "conso" do
-    run q do
-      conso(1, 2, q)
-    end
-    |> assert_eq([[1 | 2]])
-  end
-
-  test "appendo" do
-    run q do
-      appendo([1], [2], q)
-    end
-    |> assert_eq([[1, 2]])
-
-    run q do
-      appendo([1], q, [1, 2, 3])
-    end
-    |> assert_eq([[2, 3]])
-  end
-
 end

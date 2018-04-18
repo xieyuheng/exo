@@ -9,6 +9,14 @@ defmodule TheReasoned do
     [a | d]
   end
 
+  def car(p) do
+    hd(p)
+  end
+
+  def cdr(p) do
+    tl(p)
+  end
+
   def conso(a, d, p) do
     cons(a, d) <~> p
   end
