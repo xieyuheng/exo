@@ -3,7 +3,7 @@
 Exo is an implementation of microkanren and minikanren,
 to use logic programming in elixir.
 
-## package
+## Package
 
 The package is available at [hex.pm/packages/exo](https://hex.pm/packages/exo).
 
