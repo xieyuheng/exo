@@ -7,7 +7,8 @@ to use logic programming in elixir.
 
 The package is available at [hex.pm/packages/exo](https://hex.pm/packages/exo).
 
-I recommend you to use the git master version by
+I recommend you using the git master version by
+
     {:exo, git: "https://github.com/xieyuheng/exo.git"}
 
 More docs can be found at [hexdocs.pm/exo](https://hexdocs.pm/exo).
