@@ -5,6 +5,9 @@ to use logic programming in elixir.
 
 ## package
 
-the package is available at [hex.pm/packages/exo](https://hex.pm/packages/exo).
+The package is available at [hex.pm/packages/exo](https://hex.pm/packages/exo).
 
-more docs can be found at [hexdocs.pm/exo](https://hexdocs.pm/exo).
+I recommend you to use the git master version by
+    {:exo, git: "https://github.com/xieyuheng/exo.git"}
+
+More docs can be found at [hexdocs.pm/exo](https://hexdocs.pm/exo).
