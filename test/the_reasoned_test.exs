@@ -9,41 +9,53 @@ defmodule TheReasonedTest do
   end
 
   describe "(1. Playthings)" do
-    test "1:1-55" do
+    test "1:10" do
       run _ do
         fail()
       end
       |> assert_eq([])
+    end
 
+    test "1:11" do
       run q do
         true <~> q
       end
       |> assert_eq([true])
+    end
 
+    test "1:12" do
       run q do
         fail()
         true <~> q
       end
       |> assert_eq([])
+    end
 
+    test "1:13" do
       run q do
         succeed()
         true <~> q
       end
       |> assert_eq([true])
+    end
 
+    test "1:15" do
       run r do
         succeed()
         :corn <~> r
       end
       |> assert_eq([:corn])
+    end
 
+    test "1:17" do
       run r do
         fail()
         :corn <~> r
       end
       |> assert_eq([])
+    end
 
+    test "1:18" do
       run q do
         false <~> q
       end
@@ -69,7 +81,9 @@ defmodule TheReasonedTest do
         x <~> q
       end
       |> assert_eq([false])
+    end
 
+    test "1:23" do
       run q do
         fresh [x] do
           true <~> x
@@ -77,7 +91,9 @@ defmodule TheReasonedTest do
         end
       end
       |> assert_eq([true])
+    end
 
+    test "1:26" do
       run q do
         fresh [x] do
           x <~> true
@@ -85,7 +101,9 @@ defmodule TheReasonedTest do
         end
       end
       |> assert_eq([true])
+    end
 
+    test "1:27" do
       run q do
         fresh [x] do
           x <~> true
@@ -93,46 +111,60 @@ defmodule TheReasonedTest do
         end
       end
       |> assert_eq([true])
+    end
 
+    test "1:28" do
       run _ do
         succeed()
       end
       |> assert_eq([:_0])
+    end
 
+    test "1:30" do
       run r do
         fresh [x, y] do
           [x, y] <~> r
         end
       end
       |> assert_eq([[:_0, :_1]])
+    end
 
-      # run r do
-      #   fresh [x, y] do
-      #     [x, y, x] <~> r
-      #   end
-      # end
-      # |> assert_eq([[:_0, :_1, :_0]])
-      # # why [[:_2, :_1, :_2]] ?
+    # test "1:32" do
+    #   run r do
+    #     fresh [x, y] do
+    #       [x, y, x] <~> r
+    #     end
+    #   end
+    #   |> assert_eq([[:_0, :_1, :_0]])
+    #   # why [[:_2, :_1, :_2]] ?
+    # end
 
+    test "1:34" do
       run q do
         false <~> q
         true <~> q
       end
       |> assert_eq([])
+    end
 
+    test "1:35" do
       run q do
         false <~> q
         false <~> q
       end
       |> assert_eq([false])
+    end
 
+    test "1:37" do
       run r do
         fresh x do
           x <~> r
         end
       end
       |> assert_eq([:_0])
+    end
 
+    test "1:38" do
       run q do
         fresh x do
           true <~> x
@@ -140,7 +172,9 @@ defmodule TheReasonedTest do
         end
       end
       |> assert_eq([true])
+    end
 
+    test "1:39" do
       run q do
         fresh x do
           x <~> q
@@ -148,11 +182,23 @@ defmodule TheReasonedTest do
         end
       end
       |> assert_eq([true])
+    end
 
+    test "1:45" do
       run _ do
-        oro do
-          fail()
-          succeed()
+        conde do
+          [fail(), fail()]
+          [succeed()]
+        end
+      end
+      |> assert_eq([:_0])
+    end
+
+    test "1:46" do
+      run _ do
+        conde do
+          [succeed(), succeed()]
+          [fail()]
         end
       end
       |> assert_eq([:_0])
@@ -164,7 +210,9 @@ defmodule TheReasonedTest do
         end
       end
       |> assert_eq([:_0])
+    end
 
+    test "1:47 by oro" do
       run x do
         oro do
           ando do :olive <~> x; succeed() end
@@ -181,7 +229,28 @@ defmodule TheReasonedTest do
         end
       end
       |> assert_eq([:olive, :oil])
+    end
 
+    test "1:47 by conde" do
+      run x do
+        conde do
+          [:olive <~> x, succeed()]
+          [:oil <~> x, succeed()]
+          [fail(), fail()]
+        end
+      end
+      |> assert_eq([:olive, :oil])
+
+      run x do
+        conde do
+          [:olive <~> x]
+          [:oil <~> x]
+        end
+      end
+      |> assert_eq([:olive, :oil])
+    end
+
+    test "1:50 by oro" do
       run x do
         oro do
           ando do :virgin <~> x; fail() end
@@ -192,7 +261,22 @@ defmodule TheReasonedTest do
         end
       end
       |> assert_eq([:olive, :_0, :oil])
+    end
 
+    test "1:50 by conde" do
+      run x do
+        conde do
+          [:virgin <~> x, fail()]
+          [:olive <~> x, succeed()]
+          [succeed(), succeed()]
+          [:oil <~> x, succeed()]
+          [fail(), fail()]
+        end
+      end
+      |> assert_eq([:olive, :_0, :oil])
+    end
+
+    test "1:52 by oro" do
       run 2, x do
         oro do
           ando do :extra <~> x; succeed() end
@@ -203,7 +287,22 @@ defmodule TheReasonedTest do
         end
       end
       |> assert_eq([:extra, :olive])
+    end
 
+    test "1:52 by conde" do
+      run 2, x do
+        conde do
+          [:extra <~> x, succeed()]
+          [:virgin <~> x, fail()]
+          [:olive <~> x, succeed()]
+          [:oil <~> x, succeed()]
+          [fail(), fail()]
+        end
+      end
+      |> assert_eq([:extra, :olive])
+    end
+
+    test "1:53" do
       run r do
         fresh [x, y] do
           :split <~> x
@@ -212,7 +311,9 @@ defmodule TheReasonedTest do
         end
       end
       |> assert_eq([[:split, :pea]])
+    end
 
+    test "1:54 by oro" do
       run r do
         fresh [x, y] do
           oro do
@@ -223,12 +324,40 @@ defmodule TheReasonedTest do
         end
       end
       |> assert_eq([[:split, :pea], [:navy, :bean]])
+    end
 
+    test "1:54 by conde" do
+      run r do
+        fresh [x, y] do
+          conde do
+            [:split <~> x, :pea <~> y]
+            [:navy <~> x, :bean <~> y]
+          end
+          [x, y] <~> r
+        end
+      end
+      |> assert_eq([[:split, :pea], [:navy, :bean]])
+    end
+
+    test "1:55 by oro" do
       run r do
         fresh [x, y] do
           oro do
             ando do :split <~> x; :pea <~> y end
             ando do :navy <~> x; :bean <~> y end
+          end
+          [x, y, :soup] <~> r
+        end
+      end
+      |> assert_eq([[:split, :pea, :soup], [:navy, :bean, :soup]])
+    end
+
+    test "1:55 by conde" do
+      run r do
+        fresh [x, y] do
+          conde do
+            [:split <~> x, :pea <~> y]
+            [:navy <~> x, :bean <~> y]
           end
           [x, y, :soup] <~> r
         end
@@ -253,10 +382,10 @@ defmodule TheReasonedTest do
     test "1:57 calling teacupo" do
       run r do
         fresh [x, y] do
-          oro do
-            ando do teacupo(x); true <~> y; succeed() end
-            ando do false <~> x; true <~> y; succeed() end
-            ando do fail(); fail() end
+          conde do
+            [teacupo(x), true <~> y, succeed()]
+            [false <~> x, true <~> y, succeed()]
+            [fail(), fail()]
           end
           [x, y] <~> r
         end
