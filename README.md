@@ -1,20 +1,10 @@
 # Exo
 
-**TODO: Add description**
+Exo is an implementation of microkanren and minikanren,
+to use logic programming in elixir.
 
-## Installation
+## package
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `exo` to your list of dependencies in `mix.exs`:
+the package is available at [hex.pm/exo](https://hex.pm/exo).
 
-```elixir
-def deps do
-  [
-    {:exo, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/exo](https://hexdocs.pm/exo).
+more docs can be found at [hexdocs.pm/exo](https://hexdocs.pm/exo).
