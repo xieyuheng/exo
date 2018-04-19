@@ -33,8 +33,19 @@ defmodule TheReasoned do
     end
   end
 
+  def null?(x) do
+    x === []
+  end
+
   def nullo(x) do
     x <~> []
+  end
+
+  def pair?(p) do
+    case p do
+      [_ | _] -> true
+      _ -> false
+    end
   end
 
   def pairo(p) do
@@ -43,6 +54,19 @@ defmodule TheReasoned do
     end
   end
 
+  def list?(l) do
+    cond do
+      null?(l) -> true
+      pair?(l) -> list?(cdr(l))
+      :else -> false
+    end
+  end
+
+  #               The First Commandment
+  #   To transform a function whose value is a boolean
+  # into a function whose value is a goal, replace cond
+  # with conde and unnest each question and answer.
+
   def listo(l) do
     oro do
       nullo(l)
@@ -50,6 +74,56 @@ defmodule TheReasoned do
         pairo(l)
         cdro(l, d)
         listo(d)
+      end
+    end
+  end
+
+  def lol?(l) do
+    cond do
+      null?(l) -> true
+      list?(car(l)) -> lol?(cdr(l))
+      :else -> false
+    end
+  end
+
+  def lolo(l) do
+    oro do
+      nullo(l)
+      fresh [a, d] do
+        caro(l, a)
+        listo(a)
+        cdro(l, d)
+        lolo(d)
+      end
+    end
+  end
+
+  def twinso(s) do
+    fresh [x] do
+      [x, x] <~> s
+    end
+  end
+
+  def loto(l) do
+    oro do
+      nullo(l)
+      fresh [a, d] do
+        caro(l, a)
+        twinso(a)
+        cdro(l, d)
+        loto(d)
+      end
+    end
+  end
+
+  def listofo(predo, l) do
+    oro do
+      nullo(l)
+      fresh [a, d] do
+        caro(l, a)
+        predo.(a)
+        cdro(l, d)
+        listofo(predo, d)
       end
     end
   end

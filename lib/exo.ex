@@ -413,6 +413,7 @@ defmodule Exo do
 
   @spec reify_s(value, substitution) :: substitution
   def reify_s(v, s) do
+    v = walk(v, s)
     case v do
       %Var{} -> Map.put(s, v, reify_name(length(Map.keys(s))))
       [head | tail] -> reify_s(tail, reify_s(head, s))

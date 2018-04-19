@@ -1,5 +1,6 @@
 defmodule TheReasonedTest do
-  use ExUnit.Case, async: true
+  # use ExUnit.Case, async: true
+  use ExUnit.Case
 
   import Exo
   import TheReasoned
@@ -129,15 +130,14 @@ defmodule TheReasonedTest do
       |> assert_eq([[:_0, :_1]])
     end
 
-    # test "1:32" do
-    #   run r do
-    #     fresh [x, y] do
-    #       [x, y, x] <~> r
-    #     end
-    #   end
-    #   |> assert_eq([[:_0, :_1, :_0]])
-    #   # why [[:_2, :_1, :_2]] ?
-    # end
+    test "1:32" do
+      run r do
+        fresh [x, y] do
+          [x, y, x] <~> r
+        end
+      end
+      |> assert_eq([[:_0, :_1, :_0]])
+    end
 
     test "1:34" do
       run q do
@@ -737,7 +737,145 @@ defmodule TheReasonedTest do
   end
 
   describe "(3. Seeing Old Friends in New Ways)" do
+    test "3:1" do
+      list?([[:a], [:a, :b], :c])
+      |> assert_eq(true)
+    end
 
+    test "3:2" do
+      list?([])
+      |> assert_eq(true)
+    end
+
+    test "3:3" do
+      list?(:s)
+      |> assert_eq(false)
+    end
+
+    test "3:4" do
+      list?([:d, :a, :t, :e | :s])
+      |> assert_eq(false)
+    end
+
+    test "3:7" do
+      run x do
+        listo([:a, :b, x, :d])
+      end
+      |> assert_eq([:_0])
+    end
+
+    test "3:10" do
+      run 1, x do
+        listo([:a, :b, :c | x])
+      end
+      |> assert_eq([[]])
+    end
+
+    test "3:14" do
+      run 5, x do
+        listo([:a, :b, :c | x])
+      end
+      |> assert_eq(
+        [
+          [],
+          [:_0],
+          [:_0, :_1],
+          [:_0, :_1, :_2],
+          [:_0, :_1, :_2, :_3],
+        ])
+    end
+
+    test "3:20" do
+      run 1, l do
+        lolo(l)
+      end
+      |> assert_eq([[]])
+    end
+
+    test "3:21" do
+      run q do
+        fresh [x, y] do
+          lolo([[:a, :b], [x, :c], [:d, y]])
+          true <~> q
+        end
+      end
+      |> assert_eq([true])
+    end
+
+    test "3:22" do
+      run 1, q do
+        fresh [x] do
+          lolo([[:a, :b] | x])
+          true <~> q
+        end
+      end
+      |> assert_eq([true])
+    end
+
+    test "3:32" do
+      run q do
+        twinso([:tofu, :tofu])
+        true <~> q
+      end
+      |> assert_eq([true])
+    end
+
+    test "3:33" do
+      run z do
+        twinso([z, :tofu])
+      end
+      |> assert_eq([:tofu])
+    end
+
+    test "3:38" do
+      run 1, z do
+        loto([[:g, :g] | z])
+      end
+      |> assert_eq([[]])
+    end
+
+    test "3:42" do
+      run 5, z do
+        loto([[:g, :g] | z])
+      end
+      |> assert_eq([
+        [],
+        [[:_0, :_0]],
+        [[:_0, :_0], [:_1, :_1]],
+        [[:_0, :_0], [:_1, :_1], [:_2, :_2]],
+        [[:_0, :_0], [:_1, :_1], [:_2, :_2], [:_3, :_3]],
+      ])
+    end
+
+    test "3:45" do
+      run 5, r do
+        fresh [w, x, y, z] do
+          loto([[:g, :g], [:e, w], [x, y] | z])
+          [w, [x, y], z] <~> r
+        end
+      end
+      |> assert_eq([
+        [:e, [:_0, :_0], []],
+        [:e, [:_0, :_0], [[:_1, :_1]]],
+        [:e, [:_0, :_0], [[:_1, :_1], [:_2, :_2]]],
+        [:e, [:_0, :_0], [[:_1, :_1], [:_2, :_2], [:_3, :_3]]],
+        [:e, [:_0, :_0], [[:_1, :_1], [:_2, :_2], [:_3, :_3], [:_4, :_4]]]
+      ])
+    end
+
+    test "3:49" do
+      run 3, out do
+        fresh [w, x, y, z] do
+          [[:g, :g], [:e, w], [x, y] | z] <~> out
+          listofo(&twinso/1, out)
+        end
+      end
+      |> assert_eq([
+        [[:g, :g], [:e, :e], [:_0, :_0]],
+        [[:g, :g], [:e, :e], [:_0, :_0], [:_1, :_1]],
+        [[:g, :g], [:e, :e], [:_0, :_0], [:_1, :_1], [:_2, :_2]]
+      ])
+    end
   end
 
   describe "(4. Members Only)" do
