@@ -128,6 +128,61 @@ defmodule TheReasoned do
     end
   end
 
+  def member?(x, l) do
+    cond do
+      null?(l) -> false
+      eq_car?(l, x) -> true
+      :else -> member?(x, cdr(l))
+    end
+  end
+
+  def eq_car?(l, x) do
+    car(l) === x
+  end
+
+  def membero(x, l) do
+    oro do
+      caro(l, x)
+      fresh [d] do
+        cdro(l, d)
+        membero(x, d)
+      end
+    end
+  end
+
+  def pmembero(x, l) do
+    oro do
+      ando do
+        caro(l, x)
+        cdro(l, [])
+      end
+      fresh [d] do
+        cdro(l, d)
+        pmembero(x, d)
+      end
+    end
+  end
+
+  def first_value(l) do
+    run 1, y do
+      membero(y, l)
+    end
+  end
+
+  def memberrevo(x, l) do
+    oro do
+      fresh [d] do
+        cdro(l, d)
+        memberrevo(x, d)
+      end
+      caro(l, x)
+    end
+  end
+
+  
+
+  # ><><><
+
   def appendo(l, s, out) do
     oro do
       ando do nullo(l); out <~> s end

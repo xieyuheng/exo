@@ -1,6 +1,5 @@
 defmodule TheReasonedTest do
-  # use ExUnit.Case, async: true
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   import Exo
   import TheReasoned
@@ -875,6 +874,105 @@ defmodule TheReasonedTest do
         [[:g, :g], [:e, :e], [:_0, :_0], [:_1, :_1]],
         [[:g, :g], [:e, :e], [:_0, :_0], [:_1, :_1], [:_2, :_2]]
       ])
+    end
+
+    test "3:53" do
+      member?(:olive, [:virgin, :olive, :oil])
+      |> assert_eq(true)
+    end
+
+    test "3:57" do
+      run q do
+        membero(:olive, [:virgin, :olive, :oil])
+        true <~> q
+      end
+      |> assert_eq([true])
+    end
+
+    test "3:58" do
+      run y do
+        membero(y, [:hummus, :with, :pita])
+      end
+      |> assert_eq([:hummus, :with, :pita])
+    end
+
+    test "3:66" do
+      run x do
+        membero(:e, [:pasta, x, :fagioli])
+      end
+      |> assert_eq([:e])
+    end
+
+    test "3:71" do
+      run r do
+        fresh [x, y] do
+          membero(:e, [:pasta, x, :fagioli, y])
+          [x, y] <~> r
+        end
+      end
+      |> assert_eq([[:e, :_0], [:_0, :e]])
+    end
+
+    test "3:73" do
+      run 1, l do
+        membero(:tofu, l)
+      end
+      |> assert_eq([[:tofu | :_0]])
+    end
+
+    test "3:76" do
+      run 5, l do
+        membero(:tofu, l)
+      end
+      |> assert_eq([
+        [:tofu | :_0],
+        [:_0, :tofu | :_1],
+        [:_0, :_1, :tofu | :_2],
+        [:_0, :_1, :_2, :tofu | :_3],
+        [:_0, :_1, :_2, :_3, :tofu | :_4],
+      ])
+    end
+
+    test "3:80" do
+      run 5, l do
+        pmembero(:tofu, l)
+      end
+      |> assert_eq([
+        [:tofu],
+        [:_0, :tofu],
+        [:_0, :_1, :tofu],
+        [:_0, :_1, :_2, :tofu],
+        [:_0, :_1, :_2, :_3, :tofu],
+      ])
+    end
+
+    test "3:81" do
+      run q do
+        pmembero(:tofu, [:a, :b, :tofu, :d, :tofu])
+        true <~> q
+      end
+      |> assert_eq([true])
+
+      run q do
+        membero(:tofu, [:a, :b, :tofu, :d, :tofu])
+        true <~> q
+      end
+      |> assert_eq([true, true])
+    end
+
+    test "3:96" do
+      first_value([:pasta, :e, :fagioli])
+      |> assert_eq([:pasta])
+
+      first_value([])
+      |> assert_eq([])
+    end
+
+    test "3:100" do
+      run x do
+        memberrevo(x, [:pasta, :e, :fagioli])
+      end
+      |> assert_eq([:fagioli, :e, :pasta])
     end
   end
 
