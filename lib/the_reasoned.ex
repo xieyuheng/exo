@@ -179,7 +179,24 @@ defmodule TheReasoned do
     end
   end
 
-  
+  def mem(x, l) do
+    cond do
+      null?(l) -> false
+      eq_car?(l, x) -> l
+      :else -> mem(x, cdr(l))
+    end
+  end
+
+  def memo(x, l, out) do
+    oro do
+      nullo(l)
+      ando do caro(l, x); l <~> out end
+      fresh [d] do
+        cdro(l, d)
+        memo(x, d, out)
+      end
+    end
+  end
 
   # ><><><
 
@@ -188,8 +205,8 @@ defmodule TheReasoned do
       ando do nullo(l); out <~> s end
       fresh [a, d, rec] do
         conso(a, d, l)
-        appendo(d, s, rec)
         conso(a, rec, out)
+        appendo(d, s, rec)
       end
     end
   end

@@ -977,6 +977,34 @@ defmodule TheReasonedTest do
   end
 
   describe "(4. Members Only)" do
+    test "4:1" do
+      mem(:tofu, [:a, :b, :tofu, :d, :peas, :e])
+      |> assert_eq([:tofu, :d, :peas, :e])
+    end
+
+    test "4:2" do
+      mem(:tofu, [:a, :b, :peas, :d, :peas, :e])
+      |> assert_eq(false)
+    end
+
+    test "4:3" do
+      run out do
+        mem(:tofu, [:a, :b, :tofu, :d, :peas, :e]) <~> out
+      end
+      |> assert_eq([[:tofu, :d, :peas, :e]])
+    end
+
+    test "4:10" do
+      run 2, out do
+        fresh [x] do
+          memo(:tofu, [:a, :b, x, :d, :tofu, :e], out)
+        end
+      end
+      |> assert_eq([
+        [:tofu, :d, :tofu, :e],
+        [:tofu, :e],
+      ])
+    end
 
   end
 
