@@ -5,10 +5,6 @@
 
 *** re org exo.org
 
-*** org-mode for exo_test.exs
-
-*** org-mode for the_reasoned_test.exs
-
 *** finish the book
 
 *** compare logic programming and dependent type syetem
