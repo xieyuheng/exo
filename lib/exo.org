@@ -3,9 +3,11 @@
 
 * [todo-stack]
 
-*** finish the book
-
 *** compare logic programming and dependent type syetem
+
+*** review relational database
+
+*** finish the book
 
 *** be strict about value type
 
@@ -16,10 +18,6 @@
 *** learn from prolog
 
 *** the relation between judgment as type
-
-*** seeking for more usage
-
-    - to replace redis
 
 * prolog
 

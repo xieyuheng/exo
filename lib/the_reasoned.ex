@@ -33,7 +33,7 @@ def list?(l) do
   cond do
     null?(l) -> true
     pair?(l) -> list?(cdr(l))
-    :else -> false
+    true -> false
   end
 end
 
@@ -78,7 +78,7 @@ def lol?(l) do
   cond do
     null?(l) -> true
     list?(car(l)) -> lol?(cdr(l))
-    :else -> false
+    true -> false
   end
 end
 
@@ -128,7 +128,7 @@ def member?(x, l) do
   cond do
     null?(l) -> false
     eq_car?(l, x) -> true
-    :else -> member?(x, cdr(l))
+    true -> member?(x, cdr(l))
   end
 end
 
@@ -179,7 +179,7 @@ def mem(x, l) do
   cond do
     null?(l) -> false
     eq_car?(l, x) -> l
-    :else -> mem(x, cdr(l))
+    true -> mem(x, cdr(l))
   end
 end
 
