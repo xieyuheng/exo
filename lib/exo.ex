@@ -27,9 +27,9 @@ end
 @typedoc"""
 We tried to support all unifiable datatype of elixir.
 """
-@type value :: atom | integer | String.t | Var.t | [value]
+@type value_t :: atom | integer | String.t | Var.t | [value_t]
 
-@type substitution :: %{required(Var.t) => value}
+@type substitution_t :: %{required(Var.t) => value_t}
 
 @doc"""
 One-step walking
@@ -37,7 +37,7 @@ One-step walking
 Walking until the value is not Var.t,
 which does not care about other vars in the result value.
 """
-@spec walk(value, substitution) :: value
+@spec walk(value_t, substitution_t) :: value_t
 def walk(u, s) do
   case u do
     %Var{} ->
@@ -50,7 +50,7 @@ def walk(u, s) do
   end
 end
 
-@spec unify(substitution, value, value) :: substitution | false
+@spec unify(substitution_t, value_t, value_t) :: substitution_t | false
 def unify(s, u, v) do
   u = walk(u, s)
   v = walk(v, s)
@@ -90,16 +90,16 @@ def empty_state do
   State.c(0, %{})
 end
 
-@type state_stream ::
-        maybe_improper_list(State.t, state_stream)
-        | (-> state_stream)
+@type state_stream_t ::
+        maybe_improper_list(State.t, state_stream_t)
+        | (-> state_stream_t)
 
-@type goal :: (State.t -> state_stream)
+@type goal_t :: (State.t -> state_stream_t)
 
 @doc"""
 Perform the unification.
 """
-@spec eqo(value, value) :: goal
+@spec eqo(value_t, value_t) :: goal_t
 def eqo(u, v) do
   fn state ->
     s = unify(Map.get(state, :substitution), u, v)
@@ -117,12 +117,12 @@ Infix version of `eqo/2`.
           The Law of <~>
     v <~> w  is the same as  w <~> v.
 """
-@spec value <~> value :: goal
+@spec value_t <~> value_t :: goal_t
 def x <~> y do
   eqo(x, y)
 end
 
-@spec call_with_fresh((Var.t -> goal)) :: goal
+@spec call_with_fresh((Var.t -> goal_t)) :: goal_t
 def call_with_fresh(fun) do
   fn state ->
     id = Map.get(state, :id_counter)
@@ -131,7 +131,7 @@ def call_with_fresh(fun) do
   end
 end
 
-@spec disj(goal, goal) :: goal
+@spec disj(goal_t, goal_t) :: goal_t
 def disj(g1, g2) do
   fn state ->
     s1 = g1.(state)
@@ -140,7 +140,7 @@ def disj(g1, g2) do
   end
 end
 
-@spec conj(goal, goal) :: goal
+@spec conj(goal_t, goal_t) :: goal_t
 def conj(g1, g2) do
   fn state ->
     s1 = g1.(state)
@@ -148,7 +148,7 @@ def conj(g1, g2) do
   end
 end
 
-@spec mplus(state_stream, state_stream) :: state_stream
+@spec mplus(state_stream_t, state_stream_t) :: state_stream_t
 def mplus(s1, s2) do
   case s1 do
     [] -> s2
@@ -165,7 +165,7 @@ def mplus(s1, s2) do
   end
 end
 
-@spec bind(state_stream, goal) :: state_stream
+@spec bind(state_stream_t, goal_t) :: state_stream_t
 def bind(s, g) do
   case s do
     [] -> []
@@ -360,7 +360,7 @@ defmacro conde(exp) do
   end
 end
 
-@spec pull(state_stream) :: state_stream
+@spec pull(state_stream_t) :: state_stream_t
 def pull(state_stream) do
   if is_function(state_stream) do
     pull(state_stream.())
@@ -369,7 +369,7 @@ def pull(state_stream) do
   end
 end
 
-@spec take_all(state_stream) :: [State.t]
+@spec take_all(state_stream_t) :: [State.t]
 def take_all(state_stream) do
   state_stream = pull(state_stream)
   case state_stream do
@@ -378,7 +378,7 @@ def take_all(state_stream) do
   end
 end
 
-@spec take(state_stream, non_neg_integer) :: [State.t]
+@spec take(state_stream_t, non_neg_integer) :: [State.t]
 def take(state_stream, n) do
   if n === 0 do
     []
@@ -391,19 +391,19 @@ def take(state_stream, n) do
   end
 end
 
-@spec mk_reify([State.t]) :: [value]
+@spec mk_reify([State.t]) :: [value_t]
 def mk_reify(state_list) do
   Enum.map(state_list, &reify_state_with_1st_var/1)
 end
 
-@spec reify_state_with_1st_var(State.t) :: value
+@spec reify_state_with_1st_var(State.t) :: value_t
 def reify_state_with_1st_var(state) do
   s = Map.get(state, :substitution)
   v = deep_walk(Var.c(0), s)
   deep_walk(v, reify_s(v, %{}))
 end
 
-@spec deep_walk(value, substitution) :: value
+@spec deep_walk(value_t, substitution_t) :: value_t
 def deep_walk(v, s) do
   v = walk(v, s)
   case v do
@@ -413,7 +413,7 @@ def deep_walk(v, s) do
   end
 end
 
-@spec reify_s(value, substitution) :: substitution
+@spec reify_s(value_t, substitution_t) :: substitution_t
 def reify_s(v, s) do
   v = walk(v, s)
   case v do
@@ -431,7 +431,7 @@ def reify_name(n) do
   |> String.to_atom()
 end
 
-@spec call_with_empty_state(goal) :: state_stream
+@spec call_with_empty_state(goal_t) :: state_stream_t
 def call_with_empty_state(goal) do
   goal.(empty_state())
 end
