@@ -27,7 +27,12 @@ end
 @typedoc"""
 We tried to support all unifiable datatype of elixir.
 """
-@type value_t :: atom | integer | String.t | Var.t | [value_t]
+@type value_t ::
+          atom
+        | integer
+        | String.t
+        | Var.t
+        | [value_t]
 
 @type substitution_t :: %{required(Var.t) => value_t}
 

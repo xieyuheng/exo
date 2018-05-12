@@ -3,21 +3,32 @@
 
 * [todo-stack]
 
-*** compare logic programming and dependent type syetem
+*** be strict about value_t
+
+*** support more elixir datatypes
 
 *** review relational database
 
 *** finish the book
 
-*** be strict about value type
-
 *** occur-check
-
-*** support more elixir datatypes
 
 *** learn from prolog
 
 *** the relation between judgment as type
+
+* [note]
+
+*** comparing logic programming with dependent type syetem
+
+    - a [typical] dependent type syetem
+      in lack of reification and interfaces
+
+    - a [typical] logic programming
+      in lack of the informations
+      about the names of inference rules
+
+*** >< comparing logic programming with relational database
 
 * prolog
 
@@ -35,7 +46,7 @@
     """
     #+end_src
 
-* value
+* unify
 
 *** Var
 
@@ -67,10 +78,13 @@
     @typedoc"""
     We tried to support all unifiable datatype of elixir.
     """
-    @type value_t :: atom | integer | String.t | Var.t | [value_t]
+    @type value_t ::
+              atom
+            | integer
+            | String.t
+            | Var.t
+            | [value_t]
     #+end_src
-
-* unify
 
 *** substitution_t
 

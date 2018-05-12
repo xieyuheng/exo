@@ -181,6 +181,7 @@
   end
 
   def pmembero(x, l) do
+    # `p` denotes proper list
     oro do
       ando do
         caro(l, x)
