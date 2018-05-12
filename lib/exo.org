@@ -9,6 +9,8 @@
 
 *** org-mode for the_reasoned_test.exs
 
+*** finish the book
+
 *** compare logic programming and dependent type syetem
 
 *** be strict about value type
