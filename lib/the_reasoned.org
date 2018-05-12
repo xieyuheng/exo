@@ -1,0 +1,12 @@
+#+property: tangle the_reasoned.ex
+#+title: the reasoned
+
+* [todo-stack]
+
+*** org-mode for the_reasoned.ex
+
+* prolog
+
+* ><
+
+* epilog

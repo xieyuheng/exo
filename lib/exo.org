@@ -3,6 +3,28 @@
 
 * [todo-stack]
 
+*** re org exo.org
+
+*** org-mode for exo_test.exs
+
+*** org-mode for the_reasoned_test.exs
+
+*** compare logic programming and dependent type syetem
+
+*** be strict about value type
+
+*** occur-check
+
+*** support more elixir datatypes
+
+*** learn from prolog
+
+*** the relation between judgment as type
+
+*** seeking for more usage
+
+    - to replace redis
+
 * prolog
 
 *** defmodule Exo
