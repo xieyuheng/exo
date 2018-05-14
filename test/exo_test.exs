@@ -18,26 +18,26 @@ test "var" do
 end
 
 test "unify list" do
-  s = unify(%{},
+  s = unify(Map.new(),
     [:a, :b, :c],
     [:a, :b, :c])
-  assert s === %{}
+  assert s === Map.new()
 
-  s = unify(%{},
+  s = unify(Map.new(),
     [Var.c(0), :b, :c],
     [:a, :b, :c])
   assert s === %{Var.c(0) => :a}
 
-  s = unify(%{},
+  s = unify(Map.new(),
     [[:a, :b, :c],
      [:a, :b, :c],
      [:a, :b, :c]],
     [[:a, :b, :c],
      [:a, :b, :c],
      [:a, :b, :c]])
-  assert s === %{}
+  assert s === Map.new()
 
-  s = unify(%{},
+  s = unify(Map.new(),
     [[Var.c(0), :b, :c],
      [:a, Var.c(1), :c],
      [:a, :b, Var.c(2)]],
@@ -50,12 +50,12 @@ test "unify list" do
 end
 
 test "unify tuple" do
-  s = unify(%{},
+  s = unify(Map.new(),
     {:a, :b, :c},
     {:a, :b, :c})
-  assert s === %{}
+  assert s === Map.new()
 
-  s = unify(%{},
+  s = unify(Map.new(),
     {Var.c(0), :b, :c},
     {:a, :b, :c})
   assert s === %{Var.c(0) => :a}
@@ -68,7 +68,7 @@ test "goal" do
 
   goal = eqo([1, 2, 3], [1, 2, 3])
   state_stream = empty_state() |> goal.()
-  assert state_stream === [State.c(0, %{})]
+  assert state_stream === [State.c(0, Map.new())]
 
   goal = eqo([1, 2, 3], [3, 2, 1])
   state_stream = empty_state() |> goal.()

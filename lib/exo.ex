@@ -31,6 +31,7 @@ We tried to support all unifiable datatype of elixir.
 @type value_t ::
         atom
       | integer
+      | float
       | boolean
       | String.t
       | Var.t
@@ -95,7 +96,7 @@ end
 defmodule State do
   defstruct [
     id_counter: 0,
-    substitution: %{}
+    substitution: Map.new(),
   ]
 
   @type t :: %State{
@@ -111,7 +112,7 @@ end
 
 @spec empty_state() :: State.t
 def empty_state do
-  State.c(0, %{})
+  State.c(0, Map.new())
 end
 
 @type state_stream_t ::
@@ -424,7 +425,7 @@ end
 def reify_state_with_1st_var(state) do
   s = Map.get(state, :substitution)
   v = deep_walk(Var.c(0), s)
-  deep_walk(v, reify_s(v, %{}))
+  deep_walk(v, reify_s(v, Map.new()))
 end
 
 @spec deep_walk(value_t, substitution_t) :: value_t
@@ -447,7 +448,7 @@ def deep_walk(v, s) do
           v
           |> Map.to_list()
           |> deep_walk(s)
-          |> Enum.into(%{})
+          |> Enum.into(Map.new())
 
         true -> v
       end
