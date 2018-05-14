@@ -3,7 +3,9 @@
 
 * [todo-stack]
 
-*** be strict about value_t
+*** map as value_t
+
+*** keyword list as value_t
 
 *** support more elixir datatypes
 
@@ -18,6 +20,20 @@
 *** the relation between judgment as type
 
 * [note]
+
+*** be strict about value_t
+
+    - three functions need to know the sum type about value_t
+      - unify
+      - deep_walk
+      - reify_s
+
+    - `normalize_value` is used to help
+      `unify` and `reify_s`
+      they do not need to keep the construct for the return value
+
+    - `normalize_value` and `deep_walk`
+      need to handle the construct of all type in value_t
 
 *** comparing logic programming with dependent type syetem
 
@@ -55,6 +71,7 @@
       defstruct [
         id: 0
       ]
+
       @type t :: %Var{id: integer}
 
       @spec c(integer) :: Var.t
@@ -79,11 +96,13 @@
     We tried to support all unifiable datatype of elixir.
     """
     @type value_t ::
-              atom
-            | integer
-            | String.t
-            | Var.t
-            | [value_t]
+            atom
+          | integer
+          | boolean
+          | String.t
+          | Var.t
+          | [value_t]
+          | tuple
     #+end_src
 
 *** substitution_t
@@ -118,11 +137,15 @@
 *** unify
 
     #+begin_src elixir
-    @spec unify(substitution_t, value_t, value_t) :: substitution_t | false
+    @spec unify(substitution_t, value_t, value_t) ::
+            substitution_t
+          | false
     def unify(s, u, v) do
       u = walk(u, s)
       v = walk(v, s)
-      case {u, v} do
+      nu = normalize_value(u)
+      nv = normalize_value(v)
+      case {nu, nv} do
         {%Var{id: id}, %Var{id: id}} -> s
 
         {%Var{}, _} -> Map.put(s, u, v)
@@ -133,7 +156,18 @@
           s = unify(s, u_head, v_head)
           s && unify(s, u_tail, v_tail)
 
-        _ -> u === v && s
+        _ -> (u === v) && s
+      end
+    end
+    #+end_src
+
+*** normalize_value
+
+    #+begin_src elixir
+    def normalize_value(v) do
+      cond do
+        is_tuple(v) -> Tuple.to_list(v)
+        true -> v
       end
     end
     #+end_src
@@ -148,6 +182,7 @@
         id_counter: 0,
         substitution: %{}
       ]
+
       @type t :: %State{
         id_counter: integer,
         substitution: Exo.substitution
@@ -176,7 +211,7 @@
     #+begin_src elixir
     @type state_stream_t ::
             maybe_improper_list(State.t, state_stream_t)
-            | (-> state_stream_t)
+          | (-> state_stream_t)
     #+end_src
 
 *** goal_t
@@ -572,7 +607,15 @@
       v = walk(v, s)
       case v do
         %Var{} -> v
+
         [head | tail] -> [deep_walk(head, s) | deep_walk(tail, s)]
+
+        v when is_tuple(v) ->
+          v
+          |> Tuple.to_list()
+          |> deep_walk(s)
+          |> List.to_tuple()
+
         _ -> v
       end
     end
@@ -584,7 +627,8 @@
     @spec reify_s(value_t, substitution_t) :: substitution_t
     def reify_s(v, s) do
       v = walk(v, s)
-      case v do
+      nv = normalize_value(v)
+      case nv do
         %Var{} -> Map.put(s, v, reify_name(length(Map.keys(s))))
         [head | tail] -> reify_s(tail, reify_s(head, s))
         _ -> s

@@ -8,6 +8,7 @@ defmodule Var do
   defstruct [
     id: 0
   ]
+
   @type t :: %Var{id: integer}
 
   @spec c(integer) :: Var.t
@@ -28,11 +29,13 @@ end
 We tried to support all unifiable datatype of elixir.
 """
 @type value_t ::
-          atom
-        | integer
-        | String.t
-        | Var.t
-        | [value_t]
+        atom
+      | integer
+      | boolean
+      | String.t
+      | Var.t
+      | [value_t]
+      | tuple
 
 @type substitution_t :: %{required(Var.t) => value_t}
 
@@ -55,11 +58,15 @@ def walk(u, s) do
   end
 end
 
-@spec unify(substitution_t, value_t, value_t) :: substitution_t | false
+@spec unify(substitution_t, value_t, value_t) ::
+        substitution_t
+      | false
 def unify(s, u, v) do
   u = walk(u, s)
   v = walk(v, s)
-  case {u, v} do
+  nu = normalize_value(u)
+  nv = normalize_value(v)
+  case {nu, nv} do
     {%Var{id: id}, %Var{id: id}} -> s
 
     {%Var{}, _} -> Map.put(s, u, v)
@@ -70,7 +77,14 @@ def unify(s, u, v) do
       s = unify(s, u_head, v_head)
       s && unify(s, u_tail, v_tail)
 
-    _ -> u === v && s
+    _ -> (u === v) && s
+  end
+end
+
+def normalize_value(v) do
+  cond do
+    is_tuple(v) -> Tuple.to_list(v)
+    true -> v
   end
 end
 
@@ -79,6 +93,7 @@ defmodule State do
     id_counter: 0,
     substitution: %{}
   ]
+
   @type t :: %State{
     id_counter: integer,
     substitution: Exo.substitution
@@ -97,7 +112,7 @@ end
 
 @type state_stream_t ::
         maybe_improper_list(State.t, state_stream_t)
-        | (-> state_stream_t)
+      | (-> state_stream_t)
 
 @type goal_t :: (State.t -> state_stream_t)
 
@@ -413,7 +428,15 @@ def deep_walk(v, s) do
   v = walk(v, s)
   case v do
     %Var{} -> v
+
     [head | tail] -> [deep_walk(head, s) | deep_walk(tail, s)]
+
+    v when is_tuple(v) ->
+      v
+      |> Tuple.to_list()
+      |> deep_walk(s)
+      |> List.to_tuple()
+
     _ -> v
   end
 end
@@ -421,7 +444,8 @@ end
 @spec reify_s(value_t, substitution_t) :: substitution_t
 def reify_s(v, s) do
   v = walk(v, s)
-  case v do
+  nv = normalize_value(v)
+  case nv do
     %Var{} -> Map.put(s, v, reify_name(length(Map.keys(s))))
     [head | tail] -> reify_s(tail, reify_s(head, s))
     _ -> s

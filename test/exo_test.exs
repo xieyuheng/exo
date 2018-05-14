@@ -17,11 +17,16 @@ test "var" do
   assert Var.c(0) === Var.c(0)
 end
 
-test "unify" do
+test "unify list" do
   s = unify(%{},
     [:a, :b, :c],
     [:a, :b, :c])
   assert s === %{}
+
+  s = unify(%{},
+    [Var.c(0), :b, :c],
+    [:a, :b, :c])
+  assert s === %{Var.c(0) => :a}
 
   s = unify(%{},
     [[:a, :b, :c],
@@ -33,11 +38,6 @@ test "unify" do
   assert s === %{}
 
   s = unify(%{},
-    [Var.c(0), :b, :c],
-    [:a, :b, :c])
-  assert s === %{Var.c(0) => :a}
-
-  s = unify(%{},
     [[Var.c(0), :b, :c],
      [:a, Var.c(1), :c],
      [:a, :b, Var.c(2)]],
@@ -47,6 +47,18 @@ test "unify" do
   assert s === %{Var.c(0) => :a,
                  Var.c(1) => :b,
                  Var.c(2) => :c}
+end
+
+test "unify tuple" do
+  s = unify(%{},
+    {:a, :b, :c},
+    {:a, :b, :c})
+  assert s === %{}
+
+  s = unify(%{},
+    {Var.c(0), :b, :c},
+    {:a, :b, :c})
+  assert s === %{Var.c(0) => :a}
 end
 
 test "goal" do
@@ -119,11 +131,18 @@ test "fives" do
   assert is_function tl(state_stream)
 end
 
-test "simple unification" do
+test "unification for list" do
   run 10, x do
     [1, 2, 3] <~> [1, 2, x]
   end
   |> assert_eq([3])
+end
+
+test "unification for tuple" do
+  run 10, x do
+    {1, 2, {3}} <~> {1, 2, x}
+  end
+  |> assert_eq([{3}])
 end
 
 test "run ten fives" do
