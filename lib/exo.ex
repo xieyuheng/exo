@@ -36,6 +36,7 @@ We tried to support all unifiable datatype of elixir.
       | Var.t
       | [value_t]
       | tuple
+      | map
 
 @type substitution_t :: %{required(Var.t) => value_t}
 
@@ -84,6 +85,9 @@ end
 def normalize_value(v) do
   cond do
     is_tuple(v) -> Tuple.to_list(v)
+
+    is_map(v) && not Var.p(v) -> Map.to_list(v)
+
     true -> v
   end
 end
@@ -431,13 +435,22 @@ def deep_walk(v, s) do
 
     [head | tail] -> [deep_walk(head, s) | deep_walk(tail, s)]
 
-    v when is_tuple(v) ->
-      v
-      |> Tuple.to_list()
-      |> deep_walk(s)
-      |> List.to_tuple()
+    _ ->
+      cond do
+        is_tuple(v) ->
+          v
+          |> Tuple.to_list()
+          |> deep_walk(s)
+          |> List.to_tuple()
 
-    _ -> v
+        is_map(v) && not Var.p(v) ->
+          v
+          |> Map.to_list()
+          |> deep_walk(s)
+          |> Enum.into(%{})
+
+        true -> v
+      end
   end
 end
 

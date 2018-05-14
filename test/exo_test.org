@@ -193,11 +193,37 @@
       |> assert_eq([{3}])
     end
 
-    test "unification for keyword list" do
+    test "unification for keyword" do
       run 10, x do
-        [k1: 1, k2: 2, k2: 3] <~> [k1: 1, k2: 2, k2: x]
+        [k1: 1, k2: 2, k3: 3] <~> [k1: 1, k2: 2, k3: x]
       end
       |> assert_eq([3])
+    end
+
+    test "unification for map" do
+      run 10, x do
+        %{k1: 1, k2: 2, k3: 3} <~> %{k1: 1, k2: 2, k3: x}
+      end
+      |> assert_eq([3])
+    end
+
+    defmodule User do
+      defstruct [
+        id: nil,
+        name: nil,
+      ]
+    end
+
+    test "unification for struct" do
+      run 10, x do
+        %User{id: 0, name: "xyh"} <~> %User{id: 0, name: x}
+      end
+      |> assert_eq(["xyh"])
+
+      run 10, x do
+        %User{id: 0, name: "xyh"} <~> %User{id: x, name: "xyh"}
+      end
+      |> assert_eq([0])
     end
     #+end_src
 
