@@ -5,8 +5,6 @@
 
 *** map as value_t
 
-*** keyword list as value_t
-
 *** support more elixir datatypes
 
 *** review relational database

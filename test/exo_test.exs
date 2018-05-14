@@ -145,6 +145,13 @@ test "unification for tuple" do
   |> assert_eq([{3}])
 end
 
+test "unification for keyword list" do
+  run 10, x do
+    [k1: 1, k2: 2, k2: 3] <~> [k1: 1, k2: 2, k2: x]
+  end
+  |> assert_eq([3])
+end
+
 test "run ten fives" do
   run 10, x do
     fives(x)
