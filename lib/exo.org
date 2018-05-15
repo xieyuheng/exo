@@ -3,9 +3,28 @@
 
 * [todo-stack]
 
+*** learn from prolog -- since we can handle struct now
+
+    - the goal is
+      to make it easy to translate prolog program to exo
+
 *** review relational database
 
-*** learn from prolog -- since we can handle struct now
+*** review graphql
+
+    - compare to graphql query language
+      the query of minikanren is realy weak
+
+    - it is even feels weaker
+      than prolog and database query language
+
+*** query languages
+
+    1. minikanren's (run) interface
+    2. prolog's ?-
+    3. nosql database query language
+    4. relational database query language
+    5. graphql
 
 *** finish the book
 
@@ -29,16 +48,20 @@
     - `normalize_value` and `deep_walk`
       need to handle the construct of all type in value_t
 
-*** comparing logic programming with dependent type syetem
+*** comparing
 
-    - a [typical] dependent type syetem
-      in lack of reification and interfaces
+***** to dependent type syetem
 
-    - a [typical] logic programming
-      in lack of the informations
-      about the names of inference rules
+      - a [typical] dependent type syetem
+        in lack of reification and interfaces
 
-*** >< comparing logic programming with relational database
+      - a [typical] logic programming
+        in lack of the informations
+        about the names of inference rules
+
+***** >< to relational database
+
+***** >< to graphql
 
 * prolog
 
