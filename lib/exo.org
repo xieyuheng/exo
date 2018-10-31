@@ -50,9 +50,9 @@
 
 *** comparing
 
-***** to dependent type syetem
+***** to dependent type system
 
-      - a [typical] dependent type syetem
+      - a [typical] dependent type system
         in lack of reification and interfaces
 
       - a [typical] logic programming
